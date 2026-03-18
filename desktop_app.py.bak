@@ -1,0 +1,454 @@
+"""
+Alchemica — Desktop launcher (PyQt6 + QWebEngineView)
+
+Boots directly into the game. Server mode and port are configured
+inside the game's Settings → Server tab and take effect on next launch.
+
+Install:  pip install PyQt6 PyQt6-WebEngine
+Build:    python build_game.py
+"""
+
+import multiprocessing
+if __name__ == '__main__':
+    multiprocessing.freeze_support()
+
+import sys
+import os
+import time
+import socket
+import threading
+import logging
+from pathlib import Path
+from collections import deque
+
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QLabel, QSystemTrayIcon, QMenu, QPushButton,
+)
+from PyQt6.QtWebEngineWidgets import QWebEngineView
+from PyQt6.QtWebEngineCore import QWebEngineSettings, QWebEnginePage
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal, QObject, QThread
+from PyQt6.QtGui import QColor, QPalette, QFont, QIcon, QAction
+
+import app as flask_module
+from app import app as flask_app
+from core.config import load_config, save_config
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+log_queue = deque(maxlen=500)
+
+class _LogHandler(logging.Handler):
+    def emit(self, record):
+        try:
+            log_queue.append(self.format(record))
+        except Exception:
+            pass
+
+_handler = _LogHandler()
+_handler.setFormatter(logging.Formatter('%(asctime)s  %(levelname)s  %(message)s'))
+logging.getLogger().addHandler(_handler)
+logging.getLogger().setLevel(logging.INFO)
+logging.getLogger('PyQt6').setLevel(logging.WARNING)
+
+# ── Server startup ────────────────────────────────────────────────────────────
+_server_started = False
+
+def _determine_binding():
+    """Read config and return (host, port) for Flask binding."""
+    try:
+        cfg = load_config(force_reload=True)
+        host = "0.0.0.0" if cfg.get("server_mode") else "127.0.0.1"
+        port = int(cfg.get("server_port") or 5000)
+        if not (1024 <= port <= 65535):
+            port = 5000
+    except Exception:
+        host, port = "127.0.0.1", 5000
+    return host, port
+
+def _run_flask(host, port):
+    global _server_started
+    if _server_started:
+        return
+    _server_started = True
+    flask_module._DESKTOP_APP = True
+    flask_app.run(host=host, port=port, debug=False, use_reloader=False, threaded=True)
+
+def start_server(host, port):
+    if _server_started:
+        return
+    threading.Thread(target=_run_flask, args=(host, port), daemon=True).start()
+
+def wait_for_server(port, timeout=15.0):
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.3):
+                return True
+        except OSError:
+            time.sleep(0.08)
+    return False
+
+# ── Background worker ─────────────────────────────────────────────────────────
+class ServerWorker(QObject):
+    ready  = pyqtSignal()
+    failed = pyqtSignal()
+
+    def __init__(self, host, port):
+        super().__init__()
+        self.host = host
+        self.port = port
+
+    def run(self):
+        start_server(self.host, self.port)
+        if wait_for_server(self.port):
+            self.ready.emit()
+        else:
+            self.failed.emit()
+
+# ── Silent web page ───────────────────────────────────────────────────────────
+class SilentPage(QWebEnginePage):
+    def javaScriptConsoleMessage(self, level, message, line, source):
+        pass
+
+# ── Main window ───────────────────────────────────────────────────────────────
+class MainWindow(QMainWindow):
+    def __init__(self, host, port):
+        super().__init__()
+        self.host      = host
+        self.port      = port
+        self.game_url  = f"http://127.0.0.1:{port}"
+        self._server_mode = (host == "0.0.0.0")
+
+        self.setWindowTitle("Alchemica")
+
+        self._icon = self._load_icon()
+        if self._icon:
+            self.setWindowIcon(self._icon)
+            QApplication.instance().setWindowIcon(self._icon)
+
+        self._set_dark_palette()
+        self._build_loading_ui()
+        self._setup_tray()
+        self._start_server_async()
+
+    # ── Icon / tray ──────────────────────────────────────────────────────────
+    def _load_icon(self):
+        base = Path(__file__).parent / "assets"
+        for name in ("icon.ico", "icon_256.png", "logo.png"):
+            p = base / name
+            if p.exists():
+                return QIcon(str(p))
+        return None
+
+    def _setup_tray(self):
+        if not QSystemTrayIcon.isSystemTrayAvailable():
+            return
+        self._tray = QSystemTrayIcon(self)
+        if self._icon:
+            self._tray.setIcon(self._icon)
+        self._tray.setToolTip("Alchemica")
+
+        menu = QMenu()
+        open_act = QAction("Open Alchemica", self)
+        open_act.triggered.connect(self._bring_to_front)
+        quit_act = QAction("Quit", self)
+        quit_act.triggered.connect(QApplication.instance().quit)
+        menu.addAction(open_act)
+        menu.addSeparator()
+        menu.addAction(quit_act)
+        self._tray.setContextMenu(menu)
+        self._tray.activated.connect(
+            lambda reason: self._bring_to_front()
+            if reason == QSystemTrayIcon.ActivationReason.DoubleClick else None
+        )
+        self._tray.show()
+
+    def _bring_to_front(self):
+        self.showNormal()
+        self.raise_()
+        self.activateWindow()
+
+    def closeEvent(self, event):
+        if hasattr(self, "_tray") and self._tray.isVisible():
+            self.hide()
+            self._tray.showMessage(
+                "Alchemica",
+                "Still running in the system tray.",
+                QSystemTrayIcon.MessageIcon.Information,
+                2000,
+            )
+            event.ignore()
+        else:
+            event.accept()
+
+    # ── Dark palette ─────────────────────────────────────────────────────────
+    def _set_dark_palette(self):
+        p = QPalette()
+        p.setColor(QPalette.ColorRole.Window,          QColor("#0f0f13"))
+        p.setColor(QPalette.ColorRole.WindowText,      QColor("#e0e0e0"))
+        p.setColor(QPalette.ColorRole.Base,            QColor("#1a1a20"))
+        p.setColor(QPalette.ColorRole.AlternateBase,   QColor("#141419"))
+        p.setColor(QPalette.ColorRole.Text,            QColor("#e0e0e0"))
+        p.setColor(QPalette.ColorRole.Button,          QColor("#1a1a20"))
+        p.setColor(QPalette.ColorRole.ButtonText,      QColor("#e0e0e0"))
+        p.setColor(QPalette.ColorRole.Highlight,       QColor("#4a9eff"))
+        p.setColor(QPalette.ColorRole.HighlightedText, QColor("#ffffff"))
+        self.setPalette(p)
+        QApplication.instance().setPalette(p)
+
+    # ── Loading screen ────────────────────────────────────────────────────────
+    def _build_loading_ui(self):
+        central = QWidget()
+        central.setStyleSheet("background:#0a0a1a;")
+        self.setCentralWidget(central)
+
+        # Size window straight away so the loading screen isn't tiny
+        screen = QApplication.primaryScreen().availableGeometry()
+        self.resize(
+            min(1400, screen.width()  - 40),
+            min(900,  screen.height() - 60),
+        )
+        self.move(
+            (screen.width()  - self.width())  // 2,
+            (screen.height() - self.height()) // 2,
+        )
+
+        layout = QVBoxLayout(central)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        title = QLabel("⚗️  Alchemica")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setFont(QFont("Segoe UI", 26, QFont.Weight.Bold))
+        title.setStyleSheet("color:#e0e0e0;")
+        layout.addWidget(title)
+
+        self._status_label = QLabel("Starting…")
+        self._status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._status_label.setStyleSheet("color:#444; font-size:13px; margin-top:12px;")
+        layout.addWidget(self._status_label)
+
+    # ── Async Flask boot ──────────────────────────────────────────────────────
+    def _start_server_async(self):
+        self._worker = ServerWorker(self.host, self.port)
+        self._thread = QThread()
+        self._worker.moveToThread(self._thread)
+        self._thread.started.connect(self._worker.run)
+        self._worker.ready.connect(self._on_server_ready)
+        self._worker.failed.connect(self._on_server_failed)
+        self._worker.ready.connect(self._thread.quit)
+        self._worker.failed.connect(self._thread.quit)
+        self._thread.start()
+
+    def _on_server_ready(self):
+        self._launch_game_view()
+
+    def _on_server_failed(self):
+        self._status_label.setText(
+            f"❌  Could not start on port {self.port}. "
+            "Is something else using that port?"
+        )
+        self._status_label.setStyleSheet("color:#ff6666; font-size:13px; margin-top:12px;")
+
+    # ── Game view ─────────────────────────────────────────────────────────────
+    def _launch_game_view(self):
+        # Container so the optional server bar can sit above the webview
+        container = QWidget()
+        container.setStyleSheet("background:#0a0a1a;")
+        vbox = QVBoxLayout(container)
+        vbox.setContentsMargins(0, 0, 0, 0)
+        vbox.setSpacing(0)
+        self._game_vbox = vbox
+
+        # Server bar (only shown when bound to 0.0.0.0)
+        if self._server_mode:
+            vbox.addWidget(self._make_server_bar())
+
+        view = QWebEngineView()
+        page = SilentPage(view)
+        view.setPage(page)
+        page.setBackgroundColor(QColor("#0a0a1a"))
+
+        s = page.settings()
+        s.setAttribute(QWebEngineSettings.WebAttribute.JavascriptEnabled,          True)
+        s.setAttribute(QWebEngineSettings.WebAttribute.LocalStorageEnabled,        True)
+        s.setAttribute(QWebEngineSettings.WebAttribute.ScrollAnimatorEnabled,      True)
+        s.setAttribute(QWebEngineSettings.WebAttribute.WebGLEnabled,               True)
+        s.setAttribute(QWebEngineSettings.WebAttribute.Accelerated2dCanvasEnabled, True)
+        s.setAttribute(QWebEngineSettings.WebAttribute.PlaybackRequiresUserGesture, False)
+
+        # Boost the HTTP/resource cache so repeated assets (CSS, JS, fonts)
+        # are served from memory rather than re-fetched from Flask.
+        try:
+            from PyQt6.QtWebEngineCore import QWebEngineProfile
+            profile = view.page().profile()
+            profile.setHttpCacheMaximumSize(64 * 1024 * 1024)   # 64 MB
+        except Exception:
+            pass
+
+        view.setUrl(QUrl(self.game_url))
+        vbox.addWidget(view, stretch=1)
+
+        self.setCentralWidget(container)
+
+    # ── Server bar ────────────────────────────────────────────────────────────
+    def _make_server_bar(self):
+        """Thin green bar shown at top when server mode is active."""
+        bar = QWidget()
+        bar.setFixedHeight(34)
+        bar.setStyleSheet(
+            "background:#071407;"
+            "border-bottom:1px solid rgba(46,204,113,0.3);"
+        )
+        row = QHBoxLayout(bar)
+        row.setContentsMargins(14, 0, 14, 0)
+        row.setSpacing(10)
+
+        dot = QLabel("●")
+        dot.setStyleSheet("color:#2ecc71; font-size:10px;")
+        row.addWidget(dot)
+
+        lan_url = self._resolve_lan_url()
+        url_lbl = QLabel(f"Server Mode  ·  {lan_url}")
+        url_lbl.setStyleSheet("color:#2ecc71; font-size:12px; font-weight:600;")
+        row.addWidget(url_lbl)
+
+        row.addStretch()
+
+        # Copy-URL button
+        copy_btn = self._small_btn("Copy URL",
+            lambda: QApplication.clipboard().setText(lan_url))
+        row.addWidget(copy_btn)
+
+        # Stop-server button
+        stop_btn = self._small_btn("⏹ Stop Server",
+            self._stop_server_mode, danger=True)
+        row.addWidget(stop_btn)
+
+        return bar
+
+    def _small_btn(self, text, callback, danger=False):
+        btn = QPushButton(text)
+        btn.setFixedHeight(22)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        color = "rgba(231,76,60,0.15)" if danger else "rgba(255,255,255,0.07)"
+        border = "#c0392b" if danger else "#444"
+        txt    = "#e07070" if danger else "#999"
+        btn.setStyleSheet(
+            f"QPushButton{{background:{color};color:{txt};"
+            f"border:1px solid {border};border-radius:4px;"
+            f"font-size:11px;padding:0 10px;}}"
+            f"QPushButton:hover{{background:rgba(255,255,255,0.12);color:#fff;}}"
+        )
+        btn.clicked.connect(callback)
+        return btn
+
+    def _resolve_lan_url(self):
+        try:
+            cfg = load_config()
+            port = int(cfg.get("server_port") or 5000)
+            if cfg.get("server_custom_url_enabled") and cfg.get("server_custom_url"):
+                return cfg["server_custom_url"].rstrip("/")
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip = s.getsockname()[0]
+            s.close()
+            return f"http://{ip}:{port}"
+        except Exception:
+            return f"http://YOUR_IP:{self.port}"
+
+    def _stop_server_mode(self):
+        """Disable server mode, save config, restart."""
+        try:
+            cfg = load_config(force_reload=True)
+            cfg["server_mode"] = False
+            save_config(cfg)
+        except Exception:
+            pass
+        _restart_process()
+
+
+# ── Process restart (called from Qt thread or Flask /api/restart) ──────────────
+def _restart_process():
+    """Quit Qt and replace the current process with a fresh launch."""
+    def _do():
+        time.sleep(0.3)
+        try:
+            os.execv(sys.executable, [sys.executable] + sys.argv[1:])
+        except Exception:
+            import subprocess
+            subprocess.Popen([sys.executable] + sys.argv[1:])
+            os._exit(0)
+    threading.Thread(target=_do, daemon=True).start()
+    QApplication.instance().quit()
+
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+def main():
+    # Use RoundPreferFloor for more stable rendering on high-DPI displays
+    # PassThrough can cause sub-pixel jitter on some displays
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.RoundPreferFloor
+    )
+    # Performance flags for the embedded Chromium engine.
+    # Use --no-sandbox for environments where sandboxing is not supported.
+    # --enable-gpu-rasterization removed - known to cause flickering on some hardware.
+    # Hardware acceleration can be disabled with --no-hardware-acceleration flag.
+    
+    # Check for command-line flags
+    no_hardware_accel = "--no-hardware-acceleration" in sys.argv
+    
+    if no_hardware_accel:
+        # Minimal flags when hardware acceleration is disabled
+        chromium_flags = " ".join([
+            "--disable-gpu",
+            "--disable-software-rasterizer",
+            "--disable-accelerated-2d-canvas",
+            "--disable-webgl",
+            "--disable-gpu-compositing",
+            "--js-flags=--max-old-space-size=512",
+            "--disable-smooth-scrolling",
+            "--disable-background-networking"
+        ])
+    else:
+        # Full GPU acceleration flags - disable problematic ones that cause flickering
+        chromium_flags = " ".join([
+            # Removed: --enable-gpu-rasterization (causes flickering on some hardware)
+            "--enable-zero-copy",
+            "--ignore-gpu-blocklist",
+            "--enable-accelerated-video-decode",
+            # Removed: --enable-accelerated-2d-canvas (can cause flicker on some systems)
+            "--disable-gpu-driver-bug-workarounds",
+            "--enable-features=VaapiVideoDecoder",
+            "--force-gpu-mem-available-mb=1024",
+            "--js-flags=--max-old-space-size=1024",
+            "--disable-smooth-scrolling",
+            "--enable-hardware-overlays",
+            "--disable-site-isolation-trials",
+            "--disable-background-networking"
+        ])
+    os.environ.setdefault("QTWEBENGINE_CHROMIUM_FLAGS", chromium_flags)
+    # Suppress noisy Chromium/Qt log spam
+    os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
+    os.environ["QT_LOGGING_RULES"] = "*.debug=false;qt.webengine*=false"
+
+    qt_app = QApplication(sys.argv)
+    qt_app.setApplicationName("Alchemica")
+    qt_app.setStyle("Fusion")
+
+    icon_base = Path(__file__).parent / "assets"
+    for name in ("icon.ico", "icon_256.png", "logo.png"):
+        p = icon_base / name
+        if p.exists():
+            qt_app.setWindowIcon(QIcon(str(p)))
+            break
+
+    # Determine host/port BEFORE starting Flask
+    host, port = _determine_binding()
+
+    window = MainWindow(host, port)
+    window.show()
+    sys.exit(qt_app.exec())
+
+
+if __name__ == "__main__":
+    main()

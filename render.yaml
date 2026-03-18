@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: alchemica-community
+    runtime: python
+    buildCommand: pip install -r server/requirements.txt
+    startCommand: gunicorn --chdir server server:app --workers 2 --bind 0.0.0.0:$PORT --timeout 60
+    envVars:
+      - key: HMAC_SECRET
+        generateValue: true          # Render auto-generates — copy into game settings
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false                  # set manually in Render dashboard
+      - key: TELEGRAM_CHANNEL_ID
+        sync: false
+      - key: TELEGRAM_ADMIN_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_ID
+        sync: false
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1
