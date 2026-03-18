@@ -71,14 +71,34 @@ def start_server(host, port):
         return
     threading.Thread(target=_run_flask, args=(host, port), daemon=True).start()
 
-def wait_for_server(port, timeout=15.0):
+def _wait_for_port_free(port, timeout=6.0):
+    """Block until port 5000 is no longer in use (old process has died)."""
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            with socket.create_connection(("127.0.0.1", port), timeout=0.3):
-                return True
+            with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                time.sleep(0.1)   # still alive — keep waiting
         except OSError:
-            time.sleep(0.08)
+            return   # port is free
+    # Timed out — proceed anyway; Flask will handle the bind error
+
+def wait_for_server(port, timeout=15.0):
+    """Wait until Flask responds to a real HTTP health-check.
+
+    Using an HTTP GET (not just TCP connect) ensures we hit the *new* server
+    and not the dying old one that still has an open socket.
+    """
+    import urllib.request, urllib.error
+    deadline = time.time() + timeout
+    url = f"http://127.0.0.1:{port}/api/config"
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=0.5) as r:
+                if r.status == 200:
+                    return True
+        except Exception:
+            pass
+        time.sleep(0.1)
     return False
 
 # ── System tray ───────────────────────────────────────────────────────────────
@@ -135,6 +155,12 @@ def main():
     game_url    = f"http://127.0.0.1:{port}"
     server_mode = (host == "0.0.0.0")
 
+    # If we're restarting (port is already in use), wait for the old process to
+    # fully release it before we try to bind.  Without this, the new Flask
+    # either fails to bind (port busy) or wait_for_server hits the dying old
+    # server, the webview loads, then the old server dies → gray screen.
+    _wait_for_port_free(port)
+
     # Find icon
     icon_path = None
     assets = Path(__file__).parent / "assets"
@@ -175,8 +201,18 @@ def main():
 
     _setup_tray(window, icon_path)
 
-    webview.start(debug=False, private_mode=False)
+    # Use a stable per-user storage path so WebView2 doesn't conflict with a
+    # still-dying previous instance when the exe is restarted.  A consistent
+    # path (not a random temp dir) means cookies/session survive restarts.
+    try:
+        import tempfile
+        storage = str(Path(tempfile.gettempdir()) / "alchemica_webview")
+        webview.start(debug=False, private_mode=False, storage_path=storage)
+    except TypeError:
+        # Older pywebview versions don't have storage_path
+        webview.start(debug=False, private_mode=False)
 
 
 if __name__ == "__main__":
     main()
+
