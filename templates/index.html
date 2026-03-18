@@ -503,87 +503,74 @@
     /* ── Milestone Celebration ──────────────────────────────────────────────────── */
     #milestone-overlay {
       position: fixed;
-      inset: 0;
+      top: 20px;
+      right: 20px;
       z-index: 9000;
       display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
+      pointer-events: none;
     }
 
     #milestone-overlay.show {
-      display: flex;
-      animation: milestoneFadeIn 0.3s ease;
+      display: block;
+      animation: milestoneSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    @keyframes milestoneFadeIn {
-      from {
-        opacity: 0;
-      }
+    #milestone-overlay.hide {
+      animation: milestoneSlideOut 0.3s ease forwards;
+    }
 
-      to {
-        opacity: 1;
-      }
+    @keyframes milestoneSlideIn {
+      from { opacity: 0; transform: translateX(80px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes milestoneSlideOut {
+      from { opacity: 1; transform: translateX(0); }
+      to   { opacity: 0; transform: translateX(80px); }
     }
 
     #milestone-card {
       background: var(--glass-bg);
-      border: 2px solid var(--accent);
-      border-radius: 24px;
-      padding: 40px 50px;
-      text-align: center;
-      box-shadow: 0 0 60px var(--accent-glow), var(--glass-shadow);
-      animation: milestonePopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-      max-width: 380px;
-      width: 90%;
-    }
-
-    @keyframes milestonePopIn {
-      from {
-        transform: scale(0.5) translateY(40px);
-        opacity: 0;
-      }
-
-      to {
-        transform: scale(1) translateY(0);
-        opacity: 1;
-      }
+      border: 1px solid var(--accent);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 0 24px var(--accent-glow), var(--glass-shadow);
+      backdrop-filter: blur(12px);
+      pointer-events: auto;
+      cursor: pointer;
+      min-width: 200px;
+      max-width: 280px;
     }
 
     #milestone-card .mc-icon {
-      font-size: 64px;
-      margin-bottom: 12px;
-      display: block;
+      font-size: 28px;
+      flex-shrink: 0;
     }
 
     #milestone-card .mc-count {
-      font-size: 56px;
+      font-size: 22px;
       font-weight: 900;
       color: var(--accent);
       line-height: 1;
     }
 
     #milestone-card .mc-label {
-      font-size: 18px;
+      font-size: 13px;
       font-weight: 600;
-      margin: 8px 0 4px;
+      margin: 1px 0 0;
     }
 
     #milestone-card .mc-sublabel {
-      font-size: 14px;
+      font-size: 11px;
       color: var(--text-dim);
-      margin-bottom: 20px;
+      margin-top: 2px;
     }
 
     #milestone-card .mc-close {
-      padding: 10px 30px;
-      border-radius: 30px;
-      background: var(--accent);
-      color: #000;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 15px;
+      display: none;
     }
 
     /* ── Boards System ──────────────────────────────────────────────────────────── */
@@ -1049,6 +1036,12 @@
       position: relative;
       width: 100%;
       height: 100%;
+    }
+
+    /* Lift the entire canvas above the sidebar while a workspace item is being
+       dragged so items can visually pass over the panel. Removed on drag end. */
+    #craft-zone.item-dragging {
+      z-index: 25;
     }
 
     .workspace-item {
@@ -5032,11 +5025,15 @@
 
   <!-- Milestone Celebration -->
   <div id="milestone-overlay" onclick="closeMilestone()">
-    <div id="milestone-card" onclick="event.stopPropagation()">
+    <div id="milestone-card">
       <span class="mc-icon" id="mc-icon">🎉</span>
-      <div class="mc-count" id="mc-count">50</div>
-      <div class="mc-label" id="mc-label">Discoveries!</div>
-      <div class="mc-sublabel" id="mc-sublabel">You're on a roll!</div>
+      <div>
+        <div style="display:flex;align-items:baseline;gap:6px">
+          <div class="mc-count" id="mc-count">50</div>
+          <div class="mc-label" id="mc-label">Discoveries!</div>
+        </div>
+        <div class="mc-sublabel" id="mc-sublabel">You're on a roll!</div>
+      </div>
       <button class="mc-close" onclick="closeMilestone()">Keep Going!</button>
     </div>
   </div>
@@ -5342,7 +5339,8 @@
     let multiSelected = new Set();
     let workspaceItems = [];
 
-    let _bgAnimId = 'none';   // current background animation ID
+    let _bgAnimId  = 'none';   // current background animation ID
+    let _trailId   = 'none';   // current cursor trail ID
     let _customThemes = [];   // imported themes loaded on startup
 
     // ── Sort/Filter ──────────────────────────────────────────────────────────────
@@ -5751,6 +5749,7 @@
       applyCardSize(config.item_card_size || 'normal');
       if (config.custom_background) applyCustomBg(config.custom_background);
       if (config.bg_animation) _bgAnimId = config.bg_animation;
+      if (config.cursor_trail) _trailId = config.cursor_trail;
       if (save.seed) showSeed(save.seed);
 
       renderItems();
@@ -5758,6 +5757,7 @@
       renderWorldWidget();
       initStarfield();
       initBgAnimation();
+      initCursorTrail();
       checkHealth();
       setInterval(checkHealth, 30000);
       initSidebarResizer();
@@ -6243,8 +6243,12 @@
         }
         renderItems();
       } else {
-        // Add to workspace
-        addToWorkspace(key, e);
+        // Add to workspace at a random center position.
+        // We deliberately do NOT pass the event coordinates here — the cursor
+        // is still over the sidebar panel, so passing e would spawn the item
+        // hidden underneath it.  Drag-to-place (startItemDrag) is the correct
+        // path for positioning; a plain click just pops the item onto the board.
+        addToWorkspace(key, null);
       }
     }
 
@@ -6302,6 +6306,14 @@
         el.style.zIndex = 50;
         el.style.transition = 'none';
         el.classList.add('dragging');
+        // Allow item to paint over the sidebar by removing overflow clipping
+        // on the ancestor containers while dragging. Restored in onEnd.
+        const ws = document.getElementById('workspace');
+        const ca = document.getElementById('craft-area');
+        const cz = document.getElementById('craft-zone');
+        if (ws) ws.style.overflow = 'visible';
+        if (ca) ca.style.overflow = 'visible';
+        if (cz) cz.classList.add('item-dragging');
       };
 
       const onMove = (cx, cy) => {
@@ -6335,6 +6347,13 @@
         el.style.zIndex = 10;
         el.style.transition = '';
         el.classList.remove('dragging');
+        // Restore overflow clipping on the ancestor containers
+        const ws = document.getElementById('workspace');
+        const ca = document.getElementById('craft-area');
+        const cz = document.getElementById('craft-zone');
+        if (ws) ws.style.overflow = '';
+        if (ca) ca.style.overflow = '';
+        if (cz) cz.classList.remove('item-dragging');
 
         hideConnector();
         clearCombinePreviews();
@@ -8107,6 +8126,10 @@
           <select class="form-select" id="s-bganim" onchange="changeBgAnimation(this.value)">${buildBgAnimOptions()}</select>
         </div>
         <div class="form-group">
+          <label>Cursor Trail</label>
+          <select class="form-select" id="s-cursor-trail" onchange="changeCursorTrail(this.value)">${buildCursorTrailOptions()}</select>
+        </div>
+        <div class="form-group">
           <label>Custom Background</label>
           <input type="file" id="s-bgfile" accept="image/*" onchange="uploadBg(this)" style="font-size:13px;color:var(--text);width:100%">
           ${config.custom_background ? '<button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="clearBg()">Remove Background</button>' : ''}
@@ -8199,15 +8222,15 @@
             <option value="openai-fast"   ${(config.ai_model || '') === 'openai-fast' ? 'selected' : ''}>OpenAI GPT-5 Nano</option>
             <option value="claude-haiku-4-5-20251001" ${(config.ai_model || '') === 'claude-haiku-4-5-20251001' ? 'selected' : ''}>Anthropic Claude Haiku 4.5</option>
           </select>
-          <div class="form-hint">All models are free via Pollinations (rate-limited without a key).</div>
+          <div class="form-hint">A Pollinations API key is required to use these models.</div>
         </div>
         <div class="form-group">
-          <label>Pollinations API Key <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+          <label>Pollinations API Key <span style="color:var(--text-dim);font-weight:400">(required)</span></label>
           <div style="display:flex;gap:6px;">
-            <input type="password" class="form-input" id="s-apikey" value="${config.api_key || ''}" placeholder="Leave blank for free keyless access" style="flex:1">
+            <input type="password" class="form-input" id="s-apikey" value="${config.api_key || ''}" placeholder="Enter your Pollinations API key" style="flex:1">
             <button class="btn btn-sm" onclick="saveApiKey()">Save</button>
           </div>
-          <div class="form-hint"><a href="https://pollinations.ai" target="_blank" style="color:var(--accent)">Get a key at pollinations.ai</a> to remove rate limits.</div>
+          <div class="form-hint"><a href="https://pollinations.ai" target="_blank" style="color:var(--accent)">Get your free key at pollinations.ai</a></div>
         </div>
       </div>
 
@@ -11852,16 +11875,22 @@
       document.getElementById('mc-label').textContent = data.label;
       document.getElementById('mc-sublabel').textContent = data.sub;
       const overlay = document.getElementById('milestone-overlay');
-      overlay.style.display = 'flex';
+      overlay.classList.remove('hide');
+      overlay.style.display = 'block';
       requestAnimationFrame(() => overlay.classList.add('show'));
-      // Auto-close after 5s
-      setTimeout(closeMilestone, 5000);
+      // Auto-dismiss after 4s
+      clearTimeout(overlay._autoClose);
+      overlay._autoClose = setTimeout(closeMilestone, 4000);
     }
 
     function closeMilestone() {
       const overlay = document.getElementById('milestone-overlay');
-      overlay.classList.remove('show');
-      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+      clearTimeout(overlay._autoClose);
+      overlay.classList.add('hide');
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        overlay.classList.remove('show', 'hide');
+      }, 300);
     }
 
     // ══════════════════════════════════════════════════════════════════════════════
@@ -12228,6 +12257,347 @@
       APIJ('/config', { bg_animation: id });
       initBgAnimation();
     }
+
+    // ── Cursor Trail System ───────────────────────────────────────────────────────
+
+    const CURSOR_TRAILS = [
+      // Free
+      { id: 'none',    name: 'None',            free: true },
+      { id: 'sparkle', name: '✨ Sparkle Dust',  free: true },
+      { id: 'comet',   name: '☄️ Comet Tail',    free: true },
+      { id: 'bubble',  name: '🫧 Soap Bubbles',  free: true },
+      { id: 'silk',    name: '🎀 Silk Ribbon',   free: true },
+      { id: 'smoke',   name: '🔵 Alchemical Smoke', free: true },
+      // GitHub star
+      { id: 'fire',    name: '🔥 Fire Trail',    free: false, lock: 'github' },
+      { id: 'galaxy',  name: '🌌 Galaxy Swirl',  free: false, lock: 'github' },
+      { id: 'crystal', name: '💎 Crystal Shards',free: false, lock: 'github' },
+      // Void world unlock
+      { id: 'shadow',  name: '👁️ Shadow Tendrils', free: false, lock: 'void' },
+      // Christmas secret
+      { id: 'blizzard',name: '❄️ Blizzard',      free: false, lock: 'christmas' },
+    ];
+
+    function buildCursorTrailOptions() {
+      const githubStarred  = _accountData?.github_starred || false;
+      const voidUnlocked   = !!(save && save.void_world_unlocked);
+      const xmasCompleted  = !!(save && save.world_data && save.world_data.christmas && save.world_data.christmas.quest_completed);
+
+      return CURSOR_TRAILS.map(t => {
+        let locked = false;
+        let suffix = '';
+        if (!t.free) {
+          if (t.lock === 'github'    && !githubStarred) { locked = true; suffix = ' (⭐ GitHub)'; }
+          if (t.lock === 'void'      && !voidUnlocked)  { locked = true; suffix = ' (🌑 Void World)'; }
+          if (t.lock === 'christmas' && !xmasCompleted) { locked = true; suffix = ' (🎄 Christmas Quest)'; }
+        }
+        const sel      = _trailId === t.id ? 'selected' : '';
+        const disabled = locked ? 'disabled' : '';
+        return `<option value="${t.id}" ${sel} ${disabled}>${t.name}${suffix}</option>`;
+      }).join('');
+    }
+
+    function changeCursorTrail(id) {
+      _trailId = id;
+      config.cursor_trail = id;
+      APIJ('/config', { cursor_trail: id });
+      initCursorTrail();
+    }
+
+    // Trail engine ──────────────────────────────────────────────────────────────
+    let _trailCleanup = null;   // call to tear down the active trail
+    let _trailPoints  = [];     // for silk ribbon
+
+    function initCursorTrail() {
+      // Tear down any existing trail
+      if (_trailCleanup) { _trailCleanup(); _trailCleanup = null; }
+      _trailPoints = [];
+
+      // Remove any leftover trail canvas
+      const old = document.getElementById('cursor-trail-canvas');
+      if (old) old.remove();
+
+      const id = _trailId || config.cursor_trail || 'none';
+      if (id === 'none') return;
+
+      // Create canvas
+      const canvas = document.createElement('canvas');
+      canvas.id = 'cursor-trail-canvas';
+      canvas.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:99999;';
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      document.body.appendChild(canvas);
+      const ctx = canvas.getContext('2d');
+
+      // Resize
+      const onResize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+      window.addEventListener('resize', onResize);
+
+      // Particle pool
+      let particles = [];
+      let mouseX = -9999, mouseY = -9999;
+      let raf;
+
+      const accentRaw = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4a9eff';
+
+      // Parse accent to rgba helper
+      const hexToRgb = h => {
+        const r = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(h.trim());
+        return r ? { r: parseInt(r[1],16), g: parseInt(r[2],16), b: parseInt(r[3],16) } : { r:74, g:158, b:255 };
+      };
+      const ac = hexToRgb(accentRaw);
+      const acStr = `${ac.r},${ac.g},${ac.b}`;
+
+      // Spawn helpers per trail type
+      const spawn = {
+        sparkle: () => {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 0.3 + Math.random() * 0.8;
+          particles.push({ x: mouseX, y: mouseY, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed - 0.5,
+            life: 1, decay: 0.025 + Math.random()*0.02, size: 3 + Math.random()*4,
+            rot: Math.random()*Math.PI*2, rotV: (Math.random()-0.5)*0.15, type:'sparkle' });
+        },
+        comet: () => {
+          particles.push({ x: mouseX, y: mouseY, vx: (Math.random()-0.5)*0.4, vy: (Math.random()-0.5)*0.4,
+            life: 1, decay: 0.04 + Math.random()*0.03, size: 2 + Math.random()*3, type:'comet' });
+        },
+        bubble: () => {
+          if (Math.random() > 0.35) return;
+          particles.push({ x: mouseX + (Math.random()-0.5)*16, y: mouseY + (Math.random()-0.5)*16,
+            vx: (Math.random()-0.5)*0.4, vy: -0.4 - Math.random()*0.6,
+            life: 1, decay: 0.012 + Math.random()*0.01, size: 4 + Math.random()*10, type:'bubble' });
+        },
+        smoke: () => {
+          if (Math.random() > 0.55) return;
+          particles.push({ x: mouseX + (Math.random()-0.5)*8, y: mouseY,
+            vx: (Math.random()-0.5)*0.5, vy: -0.6 - Math.random()*0.5,
+            life: 1, decay: 0.014 + Math.random()*0.01, size: 6 + Math.random()*10, type:'smoke' });
+        },
+        fire: () => {
+          particles.push({ x: mouseX + (Math.random()-0.5)*12, y: mouseY,
+            vx: (Math.random()-0.5)*1, vy: -1.2 - Math.random()*1.5,
+            life: 1, decay: 0.035 + Math.random()*0.02, size: 4 + Math.random()*6, type:'fire' });
+        },
+        galaxy: () => {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 0.2 + Math.random() * 0.6;
+          const hue   = Math.floor(Math.random()*360);
+          particles.push({ x: mouseX, y: mouseY, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed,
+            life: 1, decay: 0.018 + Math.random()*0.015, size: 1.5 + Math.random()*3,
+            hue, type:'galaxy' });
+        },
+        crystal: () => {
+          if (Math.random() > 0.5) return;
+          const angle = (Math.random() * Math.PI * 2);
+          particles.push({ x: mouseX, y: mouseY, vx: Math.cos(angle)*(0.5+Math.random()*1.5),
+            vy: Math.sin(angle)*(0.5+Math.random()*1.5) - 0.5,
+            life: 1, decay: 0.03 + Math.random()*0.02, size: 3 + Math.random()*5,
+            rot: Math.random()*Math.PI, type:'crystal' });
+        },
+        shadow: () => {
+          particles.push({ x: mouseX + (Math.random()-0.5)*20, y: mouseY + (Math.random()-0.5)*20,
+            vx: (Math.random()-0.5)*0.8, vy: (Math.random()-0.5)*0.8,
+            life: 1, decay: 0.018 + Math.random()*0.012, size: 5 + Math.random()*12,
+            type:'shadow' });
+        },
+        blizzard: () => {
+          particles.push({ x: mouseX + (Math.random()-0.5)*20, y: mouseY,
+            vx: (Math.random()-0.5)*1.5, vy: 0.5 + Math.random()*1,
+            life: 1, decay: 0.022 + Math.random()*0.015, size: 2 + Math.random()*5,
+            rot: Math.random()*Math.PI*2, rotV: (Math.random()-0.5)*0.2, type:'blizzard' });
+        },
+      };
+
+      // Draw helpers
+      const draw = {
+        sparkle: (p) => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.globalAlpha = p.life * 0.9;
+          ctx.fillStyle = `rgba(${acStr},1)`;
+          const s = p.size;
+          ctx.beginPath();
+          for (let i = 0; i < 4; i++) {
+            const a = (i/4)*Math.PI*2;
+            ctx.lineTo(Math.cos(a)*s, Math.sin(a)*s);
+            ctx.lineTo(Math.cos(a+Math.PI/4)*s*0.35, Math.sin(a+Math.PI/4)*s*0.35);
+          }
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        },
+        comet: (p) => {
+          ctx.globalAlpha = p.life * 0.85;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI*2);
+          ctx.fillStyle = `rgba(${acStr},1)`;
+          ctx.fill();
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = `rgba(${acStr},0.7)`;
+        },
+        bubble: (p) => {
+          ctx.globalAlpha = p.life * 0.6;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+          ctx.strokeStyle = `rgba(${acStr},${p.life})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        },
+        smoke: (p) => {
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+          g.addColorStop(0, `rgba(${acStr},${p.life*0.35})`);
+          g.addColorStop(1, `rgba(${acStr},0)`);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+          ctx.fill();
+        },
+        fire: (p) => {
+          const t = 1 - p.life;
+          const r = Math.round(255);
+          const g = Math.round(120 * p.life);
+          const b = 0;
+          const g2 = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+          g2.addColorStop(0, `rgba(${r},${g},${b},${p.life*0.9})`);
+          g2.addColorStop(1, `rgba(${r},${g},${b},0)`);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = g2;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+          ctx.fill();
+        },
+        galaxy: (p) => {
+          ctx.globalAlpha = p.life * 0.9;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+          ctx.fillStyle = `hsla(${p.hue},100%,70%,1)`;
+          ctx.fill();
+          ctx.shadowBlur = 6;
+          ctx.shadowColor = `hsla(${p.hue},100%,70%,0.8)`;
+        },
+        crystal: (p) => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.globalAlpha = p.life * 0.85;
+          ctx.fillStyle = `rgba(${acStr},${p.life})`;
+          ctx.strokeStyle = `rgba(255,255,255,${p.life*0.6})`;
+          ctx.lineWidth = 1;
+          const s = p.size;
+          ctx.beginPath();
+          ctx.moveTo(0, -s); ctx.lineTo(s*0.4, 0);
+          ctx.lineTo(0, s);  ctx.lineTo(-s*0.4, 0);
+          ctx.closePath();
+          ctx.fill(); ctx.stroke();
+          ctx.restore();
+        },
+        shadow: (p) => {
+          const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+          g.addColorStop(0, `rgba(40,0,80,${p.life*0.7})`);
+          g.addColorStop(0.5, `rgba(80,0,160,${p.life*0.3})`);
+          g.addColorStop(1, `rgba(0,0,0,0)`);
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+          ctx.fill();
+        },
+        blizzard: (p) => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.globalAlpha = p.life * 0.8;
+          ctx.strokeStyle = `rgba(200,230,255,${p.life})`;
+          ctx.lineWidth = 1;
+          const s = p.size;
+          // Simple snowflake: 3 lines
+          for (let i = 0; i < 3; i++) {
+            const a = (i/3)*Math.PI;
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a)*s, Math.sin(a)*s);
+            ctx.lineTo(Math.cos(a+Math.PI)*s, Math.sin(a+Math.PI)*s);
+            ctx.stroke();
+          }
+          ctx.restore();
+        },
+      };
+
+      // Silk ribbon is different — no particles, just a fading polyline
+      let silkPoints = [];
+      const drawSilk = () => {
+        if (silkPoints.length < 2) return;
+        ctx.save();
+        ctx.lineJoin = 'round';
+        ctx.lineCap  = 'round';
+        for (let i = 1; i < silkPoints.length; i++) {
+          const t  = i / silkPoints.length;
+          const p  = silkPoints[i];
+          const pp = silkPoints[i-1];
+          ctx.beginPath();
+          ctx.moveTo(pp.x, pp.y);
+          ctx.lineTo(p.x,  p.y);
+          ctx.strokeStyle = `rgba(${acStr},${t * 0.7})`;
+          ctx.lineWidth   = 2 + t * 3;
+          ctx.stroke();
+        }
+        ctx.restore();
+      };
+
+      const spawnFn = spawn[id];
+      const drawFn  = draw[id];
+      const isSilk  = id === 'silk';
+
+      const tick = () => {
+        raf = requestAnimationFrame(tick);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.shadowBlur = 0;
+
+        if (isSilk) {
+          drawSilk();
+          return;
+        }
+
+        if (spawnFn) spawnFn();
+
+        particles = particles.filter(p => p.life > 0);
+        for (const p of particles) {
+          ctx.save();
+          ctx.shadowBlur = 0;
+          if (drawFn) drawFn(p);
+          ctx.globalAlpha = 1;
+          ctx.restore();
+          p.x    += p.vx;
+          p.y    += p.vy;
+          p.life -= p.decay;
+          if (p.rot  !== undefined) p.rot  += p.rotV || 0;
+          if (p.size !== undefined && id === 'bubble') p.size += 0.15;
+        }
+      };
+
+      const onMove = (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+        if (isSilk) {
+          silkPoints.push({ x: mouseX, y: mouseY });
+          if (silkPoints.length > 40) silkPoints.shift();
+        }
+      };
+      window.addEventListener('mousemove', onMove);
+      raf = requestAnimationFrame(tick);
+
+      _trailCleanup = () => {
+        cancelAnimationFrame(raf);
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('resize', onResize);
+        canvas.remove();
+        particles = [];
+        silkPoints = [];
+      };
+    }
+
+    // ── End Cursor Trail System ───────────────────────────────────────────────────
 
     function initBgAnimation() {
       const c = document.getElementById('bg-anim-canvas');
@@ -12900,21 +13270,21 @@
         <h2 style="margin:0 0 8px;font-size:22px">Welcome to Alchemica</h2>
         <p style="color:var(--text-dim);font-size:13px;line-height:1.6;margin:0">
           Alchemica uses AI to generate combinations.<br>
-          Works free out of the box via <b>Pollinations AI</b> — no key needed.<br>
-          Add a key for higher rate limits and priority access.
+          A <b>Pollinations API key is required</b> to use the AI features.<br>
+          Get your free key at <a href="https://pollinations.ai" target="_blank" style="color:var(--accent)">pollinations.ai</a>.
         </p>
       </div>
 
       <div style="background:rgba(255,255,255,0.04);border-radius:12px;padding:16px;margin-bottom:20px">
         <label
           style="font-size:12px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px">
-          Pollinations API Key <span style="font-weight:400;text-transform:none">(optional)</span>
+          Pollinations API Key <span style="font-weight:400;text-transform:none">(required)</span>
         </label>
         <input type="password" id="setup-api-key" class="form-input"
-          placeholder="Leave blank to use free keyless access" style="width:100%;box-sizing:border-box">
+          placeholder="Enter your Pollinations API key" style="width:100%;box-sizing:border-box">
         <a href="https://pollinations.ai" target="_blank"
           style="font-size:11px;color:var(--accent);text-decoration:none;display:block;margin-top:6px">
-          Get a free key at pollinations.ai →
+          Get your free key at pollinations.ai →
         </a>
       </div>
 
@@ -13009,3 +13379,4 @@ PLUGIN_VERSION = "1.0"</pre>
 </body>
 
 </html>
+
