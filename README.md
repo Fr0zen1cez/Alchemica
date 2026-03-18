@@ -2,8 +2,6 @@
 
 A browser-based element-combination crafting game powered by AI. Start with four basic elements and combine them to discover an endless number of new ones. Every result is generated live — there are no pre-set answers.
 
-![Alchemica](assets/logo.png)
-
 ---
 
 ## ✨ Features
@@ -90,9 +88,7 @@ python build_game.py
 
 ## 🔑 API Key
 
-Alchemica works **free without a key** via [Pollinations AI](https://pollinations.ai).
-
-An optional key can be added in **Settings → AI** for higher rate limits. On first launch a setup prompt appears — you can skip it and configure later.
+Alchemica works **free** via [Pollinations AI](https://pollinations.ai).
 
 To use a different model or provider, enable **Custom Endpoint** in Settings → AI and point it at any OpenAI-compatible `/v1/chat/completions` endpoint.
 
