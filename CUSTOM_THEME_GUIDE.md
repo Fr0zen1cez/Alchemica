@@ -1,6 +1,6 @@
 # 🎨 Alchemica Custom Theme Guide
 
-Create your own themes, cursor trails, and background animations — then share them with the community or sell them as supporter packs.
+Create your own themes, cursor trails, and background animations — then share them with the community.
 
 ---
 
@@ -14,8 +14,7 @@ Create your own themes, cursor trails, and background animations — then share 
 6. [Cursor Trails](#cursor-trails)
 7. [Packaging a Theme Pack (.zip)](#packaging-a-theme-pack-zip)
 8. [Importing a Theme](#importing-a-theme)
-9. [Supporter Packs](#supporter-packs)
-10. [Full Examples](#full-examples)
+9. [Full Examples](#full-examples)
 
 ---
 
@@ -227,12 +226,6 @@ Both flat and single-folder layouts are accepted.
 1. Open **Settings → Appearance → Custom Themes**
 2. Drop your `.zip` or `.json` onto the drop zone
 3. Switch to it via **Settings → Appearance → Theme**
-
----
-
-## Supporter Packs
-
-Set `"type": "supporter"` in your theme.json — this shows a 💜 badge. Sell the zip on Ko-fi as a digital product. No keys or servers needed.
 
 ---
 
