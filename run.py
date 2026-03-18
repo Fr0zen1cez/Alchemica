@@ -33,24 +33,38 @@ def install_missing():
     return True
 
 # ── 2. Flask server ───────────────────────────────────────────────────────────
+def _get_port() -> int:
+    """Read server_port from config, falling back to 5000."""
+    try:
+        from core.config import load_config
+        cfg = load_config()
+        port = int(cfg.get("server_port") or 5000)
+        return port if 1024 <= port <= 65535 else 5000
+    except Exception:
+        return 5000
+
 def start_flask():
     # Import here so auto-install above runs first
     from app import app
-    app.run(host='127.0.0.1', port=5000, debug=False, use_reloader=False, threaded=True)
+    port = _get_port()
+    app.run(host='127.0.0.1', port=port, debug=False, use_reloader=False, threaded=True)
 
 def wait_for_server(timeout=15):
+    port = _get_port()
     deadline = time.time() + timeout
     while time.time() < deadline:
         try:
-            with socket.create_connection(('127.0.0.1', 5000), timeout=0.3):
+            with socket.create_connection(('127.0.0.1', port), timeout=0.3):
                 return True
         except OSError:
             time.sleep(0.08)
     return False
 
 # ── 3. Browser app-mode launcher ─────────────────────────────────────────────
-APP_URL  = 'http://127.0.0.1:5000'
 WIN_SIZE = '--window-size=1280,800'
+
+def get_app_url() -> str:
+    return f'http://127.0.0.1:{_get_port()}'
 
 def find_browser():
     """Return (browser_name, path) for the best available browser, or None."""
@@ -97,11 +111,11 @@ def find_browser():
     return None, None
 
 
-def launch_app_window(browser_path):
+def launch_app_window(browser_path, app_url):
     """Launch browser in --app mode: no address bar, looks like a desktop app."""
     args = [
         browser_path,
-        f'--app={APP_URL}',
+        f'--app={app_url}',
         WIN_SIZE,
         '--disable-extensions',
         '--no-first-run',
@@ -135,26 +149,28 @@ def main():
     server_thread.start()
 
     if not wait_for_server():
-        print("Server failed to start. Check for port conflicts on 5000.")
+        port = _get_port()
+        print(f"Server failed to start. Check for port conflicts on {port}.")
         input("Press Enter to exit.")
         sys.exit(1)
 
     print("Server ready.")
 
+    app_url = get_app_url()
     browser_name, browser_path = find_browser()
 
     if browser_path:
         print(f"Launching via {browser_name}...")
-        if launch_app_window(browser_path):
-            print(f"Running at {APP_URL}  (close the game window to exit)\n")
+        if launch_app_window(browser_path, app_url):
+            print(f"Running at {app_url}  (close the game window to exit)\n")
         else:
             # Fallback: open in default browser
-            webbrowser.open(APP_URL)
+            webbrowser.open(app_url)
     else:
         # No Chromium browser found — open whatever the system default is
-        print(f"No Chrome/Edge found. Opening in default browser at {APP_URL}")
+        print(f"No Chrome/Edge found. Opening in default browser at {app_url}")
         print("Tip: Install Chrome or Edge for the best app-like experience.\n")
-        webbrowser.open(APP_URL)
+        webbrowser.open(app_url)
 
     # Keep Flask alive until user presses Ctrl+C
     try:
@@ -167,3 +183,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
