@@ -719,7 +719,7 @@ def api_get_worlds():
             "quest": quest,
             "quest_progress": quest_progress,
             "quest_completed": quest_completed,
-            "unlocked": all_unlocked or w["id"] in unlocked,
+            "unlocked": all_unlocked or w["id"] in unlocked or (w["id"] == "void" and bool(save.get("void_world_unlocked"))),
             "active": w["id"] == active,
             "seasonal": is_holiday,  # Mark as seasonal world
             "currently_active": is_active_holiday,  # Only active during date window
@@ -738,8 +738,9 @@ def api_switch_world():
     unlocked = set(save.get("worlds_unlocked", ["origins"]))
     unlocked = unlocked | HOLIDAY_IDS
     all_unlocked = save.get("all_worlds_unlocked", False)
+    void_ok = world_id == "void" and bool(save.get("void_world_unlocked"))
 
-    if not all_unlocked and world_id not in unlocked:
+    if not all_unlocked and not void_ok and world_id not in unlocked:
         return jsonify({"error": "World not unlocked"}), 403
 
     # Check if holiday world is currently active (within date window)
@@ -1926,15 +1927,23 @@ def api_restart():
     """Restart the desktop app process with updated settings."""
     import threading as _th
     def _do_restart():
-        time.sleep(0.4)   # let the HTTP response flush
+        time.sleep(0.8)   # give the HTTP response time to fully flush
         try:
             import os, sys as _sys
-            os.execv(_sys.executable, [_sys.executable] + _sys.argv[1:])
-        except Exception:
-            # execv not available (some OS); try subprocess fallback
-            import subprocess
-            subprocess.Popen([_sys.executable] + _sys.argv[1:])
+            # Prefer subprocess + _exit over os.execv — execv is unreliable
+            # inside PyInstaller one-file bundles on Windows because the exe
+            # unpacks to a temp dir that may still be locked when exec runs.
+            import subprocess as _sp
+            _sp.Popen([_sys.executable] + _sys.argv[1:],
+                      close_fds=True,
+                      creationflags=getattr(_sp, "CREATE_NO_WINDOW", 0))
             os._exit(0)
+        except Exception:
+            try:
+                import os, sys as _sys
+                os.execv(_sys.executable, [_sys.executable] + _sys.argv[1:])
+            except Exception:
+                pass
     _th.Thread(target=_do_restart, daemon=True).start()
     return jsonify({"ok": True, "restarting": True})
 
@@ -2829,4 +2838,5 @@ if __name__ == "__main__":
     logger.info("  Open http://localhost:5000 in your browser")
     logger.info("=" * 50)
     app.run(debug=False, port=5000)
+
 
