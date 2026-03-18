@@ -2218,7 +2218,7 @@ def api_check_github_star():
         acc["github_username"] = gh_user
         acc["github_starred"] = True
         acc["badges"]["github_star"] = datetime.utcnow().isoformat()
-        acc["theme_unlocks"] = list(set(acc.get("theme_unlocks", []) + ["neon-abyss", "forest-spirit"]))
+        acc["theme_unlocks"] = list(set(acc.get("theme_unlocks", []) + ["neon-abyss", "forest-spirit", "crimson-void", "aurora-borealis", "golden-age"]))
         save_account(acc)
         return jsonify({"ok": True, "starred": True, "themes": acc["theme_unlocks"]})
     return jsonify({"ok": True, "starred": False})
@@ -2651,24 +2651,11 @@ CUSTOM_THEMES_DIR = ASSETS_DIR / "custom_themes"
 CUSTOM_THEMES_DIR.mkdir(exist_ok=True)
 
 ALLOWED_VARS = {
-    # Core palette
-    "--bg", "--bg-grad",
-    "--accent", "--accent-glow",
-    "--text", "--text-dim", "--text-bright",
-    # Glass / panels
-    "--glass-bg", "--glass-border", "--glass-shadow",
-    "--sidebar-bg", "--item-hover-bg",
-    "--toast-bg",
-    # Particles
-    "--particle-color",
-    # Rarity
+    "--bg", "--glass-bg", "--glass-border", "--accent", "--accent-glow",
+    "--text", "--text-dim", "--text-bright", "--sidebar-bg",
+    "--particle-color", "--item-hover-bg",
     "--rarity-common", "--rarity-uncommon", "--rarity-rare",
     "--rarity-legendary", "--rarity-mythic", "--rarity-transcendent",
-    # Layout
-    "--sidebar-w", "--card-radius", "--btn-radius",
-    "--navbar-bg", "--canvas-bg",
-    # Typography
-    "--font-size-base", "--font-weight-label",
 }
 
 def _validate_theme(data: dict):
@@ -2842,3 +2829,4 @@ if __name__ == "__main__":
     logger.info("  Open http://localhost:5000 in your browser")
     logger.info("=" * 50)
     app.run(debug=False, port=5000)
+
