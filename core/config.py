@@ -46,8 +46,6 @@ DEFAULT_CONFIG = {
     "monthly_worlds_generated_week": None,  # ISO week when last generated
     "monthly_worlds_data": None,        # list of 9 AI-generated world configs
     "holiday_worlds_enabled": True,     # show seasonal holiday worlds during their 10-day window
-    # Visual
-    "idle_animations_enabled": True,    # kept for backwards compat; animations removed in v1.5
     # Server / hosting
     "server_mode": False,               # bind to 0.0.0.0 for LAN/internet access
     "server_port": 5000,                # port to listen on
