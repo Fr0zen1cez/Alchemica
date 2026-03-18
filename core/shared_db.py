@@ -1,25 +1,9 @@
-"""
-Alchemica — Shared Community Database
-==========================================
-Stores and retrieves combination results from a shared backend so friends
-can share discoveries without re-running AI.
-
-Supported backends:
-  telegram  — Telegram Bot API, uses a group/channel as the data store.
-               Each combo is posted as a structured message. On sync the
-               bot reads message history and builds a local lookup cache.
-  webhook   — Generic HTTP endpoint. POST to submit, GET to lookup.
-               User hosts their own server or uses any REST service.
-
-The local combo_cache (key → result) is persisted in config so it
-survives restarts without re-fetching the full history every time.
-"""
-
 import json
 import time
 import requests
 from core.logger import get_logger
 from core.config import load_config, save_config
+from core.utils import combo_key as _combo_key
 
 logger = get_logger()
 
@@ -40,10 +24,6 @@ def _tg(token, method, **kwargs):
     except Exception as e:
         logger.warning(f"Telegram API error ({method}): {e}")
         return None
-
-
-def _combo_key(a: str, b: str) -> str:
-    return "+".join(sorted([a.lower().strip(), b.lower().strip()]))
 
 
 # ── Main interface ────────────────────────────────────────────────────────────
@@ -346,3 +326,4 @@ def fetch_leaderboard() -> list:
     except Exception as e:
         logger.warning(f"Leaderboard fetch error: {e}")
         return []
+
