@@ -34,13 +34,6 @@
       --card-size: 1;
       --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       --font-emoji: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', emoji, sans-serif;
-      /* Layout overrides — settable via custom themes */
-      --card-radius: 10px;
-      --btn-radius: 8px;
-      --navbar-bg: rgba(10, 10, 26, 0.97);
-      --canvas-bg: transparent;
-      --font-size-base: 13px;
-      --font-weight-label: 500;
     }
 
     [data-theme="solar-flare"] {
@@ -507,28 +500,90 @@
       background: var(--accent);
     }
 
-
-    /* ── Sidebar drop-to-remove highlight ───────────────────────────────────────── */
-    #sidebar.drop-remove-hover {
-      outline: 2px dashed rgba(255, 80, 80, 0.7);
-      outline-offset: -3px;
-      background: rgba(255, 50, 50, 0.06) !important;
+    /* ── Milestone Celebration ──────────────────────────────────────────────────── */
+    #milestone-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
     }
-    #sidebar.drop-remove-hover::before {
-      content: '🗑 Drop to remove from canvas';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(200, 30, 30, 0.85);
-      color: #fff;
-      font-size: 13px;
+
+    #milestone-overlay.show {
+      display: flex;
+      animation: milestoneFadeIn 0.3s ease;
+    }
+
+    @keyframes milestoneFadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    #milestone-card {
+      background: var(--glass-bg);
+      border: 2px solid var(--accent);
+      border-radius: 24px;
+      padding: 40px 50px;
+      text-align: center;
+      box-shadow: 0 0 60px var(--accent-glow), var(--glass-shadow);
+      animation: milestonePopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 380px;
+      width: 90%;
+    }
+
+    @keyframes milestonePopIn {
+      from {
+        transform: scale(0.5) translateY(40px);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    #milestone-card .mc-icon {
+      font-size: 64px;
+      margin-bottom: 12px;
+      display: block;
+    }
+
+    #milestone-card .mc-count {
+      font-size: 56px;
+      font-weight: 900;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    #milestone-card .mc-label {
+      font-size: 18px;
       font-weight: 600;
-      padding: 8px 14px;
-      border-radius: 8px;
-      pointer-events: none;
-      white-space: nowrap;
-      z-index: 9999;
+      margin: 8px 0 4px;
+    }
+
+    #milestone-card .mc-sublabel {
+      font-size: 14px;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+    }
+
+    #milestone-card .mc-close {
+      padding: 10px 30px;
+      border-radius: 30px;
+      background: var(--accent);
+      color: #000;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 15px;
     }
 
     /* ── Boards System ──────────────────────────────────────────────────────────── */
@@ -628,7 +683,7 @@
       align-items: center;
       gap: 10px;
       padding: 8px 12px;
-      border-radius: var(--card-radius);
+      border-radius: 10px;
       background: var(--glass-bg);
       margin-bottom: 6px;
     }
@@ -1705,6 +1760,16 @@
         touch-action: none;
         -webkit-touch-callout: none;
       }
+
+      .cm-slot {
+        min-width: 100px;
+        min-height: 80px;
+      }
+
+      .cm-combine-btn {
+        font-size: 16px;
+        padding: 14px 20px;
+      }
     }
 
     @media (max-width: 400px) {
@@ -1920,7 +1985,7 @@
     #sidebar-nav {
       display: flex;
       border-top: 1px solid var(--glass-border);
-      background: var(--navbar-bg);
+      background: var(--glass-bg);
       padding: 4px 2px;
       gap: 1px;
       justify-content: space-around;
@@ -2613,7 +2678,7 @@
 
     .btn {
       padding: 8px 18px;
-      border-radius: var(--btn-radius);
+      border-radius: 10px;
       font-size: 14px;
       font-weight: 500;
       border: 1px solid var(--glass-border);
@@ -2992,8 +3057,142 @@
       margin-right: 8px;
     }
 
+    /* ── Crafting Mode UI ────────────────────────────────────────────────────────── */
+    #crafting-mode-ui {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+    }
 
-        /* ── Mobile & Responsive ────────────────────────────────────────────────────── */
+    #crafting-mode-ui.active {
+      display: flex;
+    }
+
+    .cm-container {
+      padding: 40px;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 30px;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .cm-slots {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .cm-slot {
+      width: 120px;
+      height: 120px;
+      border: 2px dashed var(--glass-border);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--glass-bg);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cm-slot:hover {
+      border-color: var(--accent);
+      background: var(--glass-bg);
+    }
+
+    .cm-slot.filled {
+      border-style: solid;
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .cm-slot .cm-emoji {
+      font-size: 40px;
+      margin-bottom: 8px;
+    }
+
+    .cm-slot .cm-name {
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    .cm-placeholder {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .cm-plus {
+      font-size: 40px;
+      color: var(--text-dim);
+      font-weight: 300;
+    }
+
+    .cm-combine-btn {
+      padding: 14px 40px;
+      font-size: 18px;
+      font-weight: 700;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .cm-combine-btn.ready {
+      opacity: 1;
+      pointer-events: auto;
+      animation: btnGlow 2s infinite;
+    }
+
+    @keyframes btnGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 4px 15px rgba(74, 158, 255, 0.4);
+      }
+
+      50% {
+        box-shadow: 0 4px 25px rgba(74, 158, 255, 0.8);
+        transform: translateY(-2px);
+      }
+    }
+
+    .cm-combine-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Animation for slots merging */
+    .cm-merging {
+      animation: cmMerge 0.5s ease-in forwards;
+    }
+
+    @keyframes cmMerge {
+      to {
+        transform: scale(0) translate(var(--tx), var(--ty));
+        opacity: 0;
+      }
+    }
+
+
+    /* ── Mobile & Responsive ────────────────────────────────────────────────────── */
     @media (max-width: 768px) {
       #sidebar {
         position: fixed;
@@ -3792,3270 +3991,98 @@
       font-size: 13px;
     }
 
-
-        /* ── Boards System ──────────────────────────────────────────────────────────── */
-    #boards-toolbar {
-      position: absolute;
-      top: 12px;
-      left: 12px;
-      z-index: 28;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .board-chip {
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      cursor: pointer;
-      transition: all 0.15s;
-      backdrop-filter: blur(10px);
-    }
-
-    .board-chip:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .board-chip.active {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    #boards-save-btn {
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      background: var(--accent-glow);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-
-    #boards-save-btn:hover {
-      background: var(--accent);
-      color: #000;
-    }
-
-    /* ── Stats Panel ────────────────────────────────────────────────────────────── */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    .stat-card {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 14px 16px;
-      text-align: center;
-    }
-
-    .stat-card .sc-val {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-
-    .stat-card .sc-label {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
-
-    .stat-rarity-bar {
-      display: flex;
-      height: 10px;
-      border-radius: 5px;
-      overflow: hidden;
-      margin: 8px 0;
-    }
-
-    .stat-rarity-bar div {
-      transition: width 0.5s;
-    }
-
-    .top-used-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border-radius: var(--card-radius);
-      background: var(--glass-bg);
-      margin-bottom: 6px;
-    }
-
-    .top-used-item .tu-rank {
-      width: 20px;
-      font-size: 11px;
-      color: var(--text-dim);
-    }
-
-    .top-used-item .tu-emoji {
-      font-size: 18px;
-    }
-
-    .top-used-item .tu-name {
-      flex: 1;
-      font-size: 13px;
-    }
-
-    .top-used-item .tu-count {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    /* ── Quick Combine (keyboard) ───────────────────────────────────────────────── */
-    #quick-combine-overlay {
+    /* ── Classic Mode Result Overlay ────────────────────────────────────────────── */
+    #classic-result-overlay {
       position: fixed;
       inset: 0;
-      z-index: 8500;
-      display: none;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 15vh;
-    }
-
-    #quick-combine-overlay.show {
-      display: flex;
-    }
-
-    #quick-combine-box {
-      background: rgba(10, 10, 26, 0.97);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 16px;
-      width: 440px;
-      max-width: 96vw;
-      box-shadow: var(--glass-shadow), 0 0 40px rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(20px);
-    }
-
-    .qc-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .qc-input {
-      flex: 1;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-size: 14px;
-      color: var(--text);
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    .qc-input:focus {
-      border-color: var(--accent);
-    }
-
-    .qc-sep {
-      font-size: 18px;
-      color: var(--text-dim);
-      font-weight: 700;
-    }
-
-    .qc-combine-btn {
-      padding: 10px 18px;
-      border-radius: 10px;
-      background: var(--accent);
-      color: #000;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 14px;
-      transition: opacity 0.15s;
-      white-space: nowrap;
-    }
-
-    .qc-combine-btn:hover {
-      opacity: 0.85;
-    }
-
-    .qc-suggestions {
-      max-height: 180px;
-      overflow-y: auto;
-      margin-top: 4px;
-    }
-
-    .qc-suggestion {
-      padding: 7px 12px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 13px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: background 0.1s;
-    }
-
-    .qc-suggestion:hover,
-    .qc-suggestion.selected {
-      background: var(--glass-bg);
-    }
-
-    .qc-hint {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 8px;
-      text-align: center;
-    }
-
-    /* ── Sort/Filter Bar ────────────────────────────────────────────────────────── */
-    #sort-filter-bar {
-      padding: 0 14px 8px;
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .sort-btn {
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 600;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      cursor: pointer;
-      color: var(--text-dim);
-      transition: all 0.15s;
-    }
-
-    .sort-btn:hover,
-    .sort-btn.active {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .rarity-filter-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border-color 0.15s, transform 0.15s;
-      flex-shrink: 0;
-    }
-
-    .rarity-filter-dot.active {
-      border-color: var(--text);
-      transform: scale(1.3);
-    }
-
-    /* ── Random Combine Button ──────────────────────────────────────────────────── */
-    #random-combine-btn {
-      padding: 6px 14px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      color: var(--text-dim);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    #random-combine-btn:hover {
-      background: var(--accent-glow);
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    #random-combine-btn:active {
-      transform: scale(0.95);
-    }
-
-    /* ── Cyber Grid background ──────────────────────────────────────────────────── */
-    [data-theme="cyber-grid"] #starfield {
-      display: none;
-    }
-
-    [data-theme="cyber-grid"] body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(0, 255, 136, 0.05) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 255, 136, 0.05) 1px, transparent 1px);
-      background-size: 40px 40px;
-      animation: gridScroll 20s linear infinite;
-    }
-
-    @keyframes gridScroll {
-      from {
-        background-position: 0 0;
-      }
-
-      to {
-        background-position: 40px 40px;
-      }
-    }
-
-    /* ── Runic Parchment background ─────────────────────────────────────────────── */
-    [data-theme="runic-parchment"] body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background-image: radial-gradient(ellipse at 20% 50%, rgba(255, 180, 60, 0.06) 0%, transparent 60%),
-        radial-gradient(ellipse at 80% 20%, rgba(180, 60, 255, 0.04) 0%, transparent 50%);
-    }
-
-    /* ── Inventory virtual scroll ───────────────────────────────────────────────── */
-    #items-panel {
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    .show-more-btn {
-      display: block;
-      width: calc(100% - 28px);
-      margin: 8px 14px;
-      padding: 8px;
-      border-radius: 10px;
-      text-align: center;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      font-size: 12px;
-      color: var(--text-dim);
-      cursor: pointer;
-    }
-
-    .show-more-btn:hover {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    *,
-    *::before,
-    *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html,
-    body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      font-family: var(--font);
-      background: var(--bg);
-      color: var(--text);
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-    }
-
-    button {
-      font-family: var(--font);
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: var(--text);
-    }
-
-    input,
-    textarea,
-    select {
-      font-family: var(--font);
-    }
-
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--glass-border);
-      border-radius: 3px;
-    }
-
-    /* ── Star Field Canvas ─────────────────────────────────────────────────────── */
-    #starfield {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
-    }
-
-    #custom-bg {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      background-size: cover;
-      background-position: center;
-      pointer-events: none;
-      display: none;
-    }
-
-    /* ── Glass Panel Mixin ─────────────────────────────────────────────────────── */
-    .glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border);
-      box-shadow: var(--glass-shadow);
-      border-radius: 16px;
-    }
-
-    /* ── Layout ────────────────────────────────────────────────────────────────── */
-    #app {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      z-index: 1;
-    }
-
-    #workspace {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #craft-area {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
+      z-index: 200;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-
-    #craft-zone {
-      position: relative;
-      width: 100%;
-      height: 100%;
-    }
-
-    .workspace-item {
-      position: absolute;
-      cursor: grab;
-      z-index: 10;
-      padding: 8px 16px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 15px;
-      font-weight: 500;
-      transition: box-shadow 0.2s, transform 0.1s;
-      touch-action: none;
-    }
-
-    .workspace-item.glass {
-      border-radius: 12px;
-    }
-
-    .workspace-item:active {
-      cursor: grabbing;
-      transform: scale(1.05);
-    }
-
-    .workspace-item .wi-emoji {
-      font-size: 20px;
-    }
-
-    .workspace-item.pending {
-      animation: pendingPulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pendingPulse {
-
-      0%,
-      100% {
-        box-shadow: 0 0 10px var(--accent-glow);
-      }
-
-      50% {
-        box-shadow: 0 0 25px var(--accent-glow), 0 0 50px var(--accent-glow);
-      }
-    }
-
-    /* ── Combine Effect ────────────────────────────────────────────────────────── */
-    .connector-line {
-      position: absolute;
       pointer-events: none;
-      z-index: 100;
-      overflow: visible;
-      width: 100%;
-      height: 100%;
-      top: 0;
-      left: 0;
       opacity: 0;
       transition: opacity 0.2s;
     }
 
-    .connector-line.active {
+    #classic-result-overlay.show {
       opacity: 1;
-    }
-
-    .connector-line line {
-      stroke: var(--accent);
-      stroke-width: 3;
-      stroke-dasharray: 8 4;
-      stroke-linecap: round;
-      filter: drop-shadow(0 0 8px var(--accent));
-      animation: dashAnim 0.5s linear infinite;
-    }
-
-    @keyframes dashAnim {
-      to {
-        stroke-dashoffset: -12;
-      }
-    }
-
-    .about-to-combine {
-      animation: pulseReady 0.6s ease-in-out infinite alternate !important;
-      border-color: var(--accent) !important;
-      z-index: 20 !important;
-    }
-
-    @keyframes pulseReady {
-      0% {
-        transform: scale(1.1);
-        box-shadow: 0 0 15px var(--accent-glow);
-      }
-
-      100% {
-        transform: scale(1.15);
-        box-shadow: 0 0 30px var(--accent), 0 0 10px var(--accent) inset;
-      }
-    }
-
-    .combine-flash {
-      position: absolute;
-      pointer-events: none;
-      z-index: 100;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: particleBurst 0.8s ease-out forwards;
-    }
-
-    @keyframes particleBurst {
-      0% {
-        opacity: 1;
-        transform: translate(0, 0) scale(1);
-      }
-
-      100% {
-        opacity: 0;
-        transform: translate(var(--dx), var(--dy)) scale(0);
-      }
-    }
-
-    /* ── Sidebar ───────────────────────────────────────────────────────────────── */
-    #sidebar {
-      width: var(--sidebar-w);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      z-index: 20;
-      position: relative;
-      border-left: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      transition: transform 0.3s ease;
-    }
-
-    #sidebar.hidden {
-      transform: translateX(100%);
-      position: absolute;
-      right: 0;
-    }
-
-    #sidebar-header {
-      padding: 16px 18px 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    #sidebar-header h2 {
-      font-size: 18px;
-      font-weight: 600;
-      flex: 1;
-    }
-
-    .seed-label {
-      font-size: 11px;
-      color: var(--text-dim);
-      padding: 2px 8px;
-      border-radius: 8px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-    }
-
-    /* Search */
-    #search-wrap {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    #search-input {
-      width: 100%;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-
-    #search-input:focus {
-      border-color: var(--accent);
-    }
-
-    #search-input::placeholder {
-      color: var(--text-dim);
-    }
-
-    /* Items grid */
-    #items-panel {
-      flex: 1;
-      overflow-y: auto;
-      padding: 10px 10px 80px;
-    }
-
-    .items-section-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-dim);
-      padding: 8px 6px 4px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .items-section-label::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--glass-border);
-    }
-
-    .items-section-collection {
-      cursor: pointer;
-      margin-top: 4px;
-    }
-
-    .items-section-collection:hover {
-      color: var(--accent);
-    }
-
-    .items-grid {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 4px 0 8px;
-    }
-
-    /* Item card */
-    .item-card {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: calc(6px * var(--card-size)) calc(10px * var(--card-size));
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: calc(13px * var(--card-size));
-      font-weight: 500;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      transition: all 0.2s;
-      position: relative;
-      max-width: 100%;
-    }
-
-    .item-card:hover {
-      border-color: var(--accent);
-      transform: translateY(-1px);
-    }
-
-    .item-card.selected {
-      border-color: var(--accent);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    .item-card .ic-emoji {
-      font-size: calc(16px * var(--card-size));
-      flex-shrink: 0;
-      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
-    }
-
-    .item-card .ic-name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .item-card .ic-pin {
-      font-size: 10px;
-      color: var(--accent);
-      margin-left: 2px;
-      flex-shrink: 0;
-    }
-
-    .item-card.rarity-legendary {
-      animation: legendaryGlow 3s ease-in-out infinite;
-      border-color: var(--rarity-legendary);
-    }
-
-    @keyframes legendaryGlow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 8px rgba(255, 170, 0, 0.3);
-      }
-
-      50% {
-        box-shadow: 0 0 20px rgba(255, 170, 0, 0.6), 0 0 40px rgba(255, 170, 0, 0.2);
-      }
-    }
-
-    .item-card.rarity-mythic {
-      animation: mythicGlow 2.5s ease-in-out infinite;
-      border-color: var(--rarity-mythic);
-    }
-
-    @keyframes mythicGlow {
-
-      0%,
-      100% {
-        box-shadow: 0 0 10px rgba(255, 68, 170, 0.4);
-      }
-
-      50% {
-        box-shadow: 0 0 24px rgba(255, 68, 170, 0.8), 0 0 48px rgba(255, 68, 170, 0.3);
-      }
-    }
-
-    .item-card.rarity-transcendent {
-      animation: transcendentGlow 2s ease-in-out infinite;
-      border-image: linear-gradient(135deg, #00ffff, #ff44aa, #ffaa00, #4aff8a, #00ffff) 1;
-      border-width: 2px;
-      border-style: solid;
-    }
-
-    @keyframes transcendentGlow {
-      0% {
-        box-shadow: 0 0 12px rgba(0, 255, 255, 0.5), 0 0 4px rgba(255, 68, 170, 0.4);
-        filter: hue-rotate(0deg);
-      }
-
-      50% {
-        box-shadow: 0 0 28px rgba(0, 255, 255, 0.8), 0 0 52px rgba(255, 68, 170, 0.3);
-      }
-
-      100% {
-        box-shadow: 0 0 12px rgba(0, 255, 255, 0.5), 0 0 4px rgba(255, 68, 170, 0.4);
-        filter: hue-rotate(360deg);
-      }
-    }
-
-    /* ── Nav Avatar ─────────────────────────────────────────────────────────────── */
-    .nav-avatar {
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: 700;
-      color: #fff;
-      background: var(--accent);
-      flex-shrink: 0;
-    }
-
-    /* ── Account / Profile Panel ────────────────────────────────────────────────── */
-    #profile-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 500;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(10px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-    }
-
-    #profile-overlay.show {
-      display: flex;
-    }
-
-    #profile-panel {
-      width: min(540px, 96vw);
-      max-height: 90vh;
-      overflow-y: auto;
-      border-radius: 20px;
-      padding: 28px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(30px);
-    }
-
-    .profile-header {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      margin-bottom: 20px;
-    }
-
-    .profile-avatar-lg {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 800;
-      color: #fff;
-      flex-shrink: 0;
-      border: 3px solid rgba(255, 255, 255, 0.2);
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .profile-username {
-      font-size: 22px;
-      font-weight: 700;
-    }
-
-    .profile-level {
-      font-size: 13px;
-      color: var(--text-dim);
-      margin-top: 3px;
-    }
-
-    .profile-xp-bar {
-      height: 6px;
-      border-radius: 3px;
-      background: var(--glass-border);
-      margin-top: 8px;
-      overflow: hidden;
-    }
-
-    .profile-xp-fill {
-      height: 100%;
-      border-radius: 3px;
-      background: var(--accent);
-      transition: width 0.5s;
-    }
-
-    .profile-section {
-      margin: 18px 0 8px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      color: var(--text-dim);
-      text-transform: uppercase;
-    }
-
-    .profile-badges {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 4px;
-    }
-
-    .profile-badge {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      min-width: 64px;
-      cursor: default;
-    }
-
-    .profile-badge .pb-icon {
-      font-size: 24px;
-    }
-
-    .profile-badge .pb-name {
-      font-size: 10px;
-      color: var(--text-dim);
-      text-align: center;
-    }
-
-    .profile-badge.earned {
-      border-color: var(--accent);
-      background: rgba(74, 158, 255, 0.1);
-    }
-
-    .profile-badge.locked {
-      opacity: 0.4;
-    }
-
-    .level-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 12px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--accent), rgba(74, 158, 255, 0.5));
-      border: 1px solid var(--accent);
-    }
-
-    .level-badge.maxed {
-      background: linear-gradient(135deg, #ff8800, #ffaa00, #ff4400);
-      border-color: #ffaa00;
-      animation: fireLevel 2s ease-in-out infinite;
-      box-shadow: 0 0 12px rgba(255, 170, 0, 0.4);
-    }
-
-    @keyframes fireLevel {
-
-      0%,
-      100% {
-        box-shadow: 0 0 12px rgba(255, 100, 0, 0.4), 0 0 4px rgba(255, 200, 0, 0.3);
-      }
-
-      50% {
-        box-shadow: 0 0 24px rgba(255, 100, 0, 0.7), 0 0 12px rgba(255, 200, 0, 0.5);
-      }
-    }
-
-    .profile-featured {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .pf-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      font-size: 14px;
-    }
-
-    .profile-stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .pstat {
-      padding: 12px;
-      border-radius: 10px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      text-align: center;
-    }
-
-    .pstat-value {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .pstat-label {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 3px;
-    }
-
-    .item-card .rarity-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .profile-featured {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .pf-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 10px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      font-size: 14px;
-    }
-
-    .profile-stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .pstat {
-      padding: 12px;
-      border-radius: 10px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      text-align: center;
-    }
-
-    .pstat-value {
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--accent);
-    }
-
-    .pstat-label {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 3px;
-    }
-
-    /* ── Mini-game windows ──────────────────────────────────────────────────────── */
-    .minigame-window {
-      position: absolute;
-      z-index: 200;
-      background: rgba(10, 10, 26, 0.97);
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-      min-width: 240px;
-      cursor: default;
-    }
-
-    .minigame-titlebar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px;
-      background: var(--glass-bg);
-      border-bottom: 1px solid var(--glass-border);
-      cursor: move;
-      user-select: none;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .minigame-close {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: rgba(255, 80, 80, 0.7);
-      font-size: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
-
-    .minigame-close:hover {
-      background: rgba(255, 80, 80, 1);
-    }
-
-    .minigame-body {
-      padding: 12px;
-    }
-
-    /* ── Mobile / Touch ─────────────────────────────────────────────────────────── */
-    @media (max-width: 600px) {
-      :root {
-        --sidebar-w: 100vw;
-      }
-
-      #app {
-        flex-direction: column;
-      }
-
-      #sidebar {
-        width: 100%;
-        height: auto;
-        max-height: 55vh;
-        border-radius: 0;
-      }
-
-      #workspace {
-        flex: 1;
-        min-height: 45vh;
-      }
-
-      #craft-zone {
-        min-height: 300px;
-      }
-
-      .item-card {
-        min-width: 80px;
-        font-size: 11px;
-        padding: 8px 6px;
-      }
-
-      .ic-emoji {
-        font-size: 22px;
-      }
-
-      .nav-btn {
-        min-width: 40px;
-        font-size: 20px;
-        padding: 8px 4px;
-      }
-
-      .nav-btn span {
-        display: none;
-      }
-
-      .panel-overlay {
-        padding: 8px;
-      }
-
-      .panel-body {
-        padding: 12px;
-      }
-
-      #mobile-topbar {
-        display: flex;
-      }
-
-      .items-grid {
-        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      }
-
-      /* Larger touch targets for drag */
-      .item-card {
-        touch-action: none;
-        -webkit-touch-callout: none;
-      }
-    }
-
-    @media (max-width: 400px) {
-      .item-card {
-        min-width: 68px;
-      }
-
-      .ic-name {
-        font-size: 9px;
-      }
-    }
-
-    @media (hover: none) and (pointer: coarse) {
-
-      /* Touch device: no hover states, bigger tap areas */
-      .item-card {
-        min-height: 72px;
-      }
-
-      button {
-        min-height: 36px;
-      }
-
-      .nav-btn {
-        min-height: 48px;
-      }
-    }
-
-    /* ── Sidebar Nav ───────────────────────────────────────────────────────────── */
-
-    /* ── Background Animation Canvas ──────────────────────────────────────────── */
-    #bg-anim-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      pointer-events: none;
-      z-index: 0;
-      transform-origin: 0 0;
-    }
-
-    /* ── Gift System CSS ─────────────────────────────────────────────────────── */
-    .gift-present {
-      position: absolute;
-      cursor: pointer;
-      z-index: 15;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      animation: giftFloat 3s ease-in-out infinite;
-      user-select: none;
-    }
-
-    @keyframes giftFloat {
-
-      0%,
-      100% {
-        transform: translateY(0) rotate(-2deg);
-      }
-
-      50% {
-        transform: translateY(-10px) rotate(2deg);
-      }
-    }
-
-    .gift-present .gp-box {
-      font-size: 40px;
-      line-height: 1;
-    }
-
-    .gift-present .gp-from {
-      font-size: 10px;
-      color: var(--accent);
-      font-weight: 600;
-      background: var(--glass-bg);
-      padding: 2px 7px;
-      border-radius: 8px;
-    }
-
-    @keyframes giftOpen {
-      0% {
-        transform: scale(1);
-        opacity: 1;
-      }
-
-      50% {
-        transform: scale(1.6) rotate(-15deg);
-      }
-
-      100% {
-        transform: scale(2.5) rotate(20deg);
-        opacity: 0;
-      }
-    }
-
-    .gift-present.opening {
-      animation: giftOpen 0.55s ease-out forwards;
-      pointer-events: none;
-    }
-
-    #gift-code-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9200;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.65);
-    }
-
-    #gift-code-overlay.show {
-      display: flex;
-    }
-
-    #gift-code-card {
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      padding: 24px 28px;
-      max-width: 440px;
-      width: 92%;
-      box-shadow: var(--glass-shadow);
-    }
-
-    .gcc-code {
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid var(--glass-border);
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 10px;
-      font-family: monospace;
-      word-break: break-all;
-      color: var(--accent);
-      margin: 10px 0;
-      max-height: 72px;
-      overflow-y: auto;
-      user-select: all;
-      cursor: text;
-    }
-
-    #claim-gift-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9100;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(4px);
-    }
-
-    #claim-gift-overlay.show {
-      display: flex;
-    }
-
-    #claim-gift-card {
-      background: var(--glass-bg);
-      border: 2px solid var(--accent);
-      border-radius: 20px;
-      padding: 32px 36px;
-      text-align: center;
-      max-width: 360px;
-      width: 92%;
-      box-shadow: 0 0 60px var(--accent-glow), var(--glass-shadow);
-      animation: milestonePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    #claim-gift-card .cgc-emoji {
-      font-size: 52px;
-      display: block;
-      margin-bottom: 8px;
-    }
-
-    #claim-gift-card .cgc-name {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 4px;
-    }
-
-    #claim-gift-card .cgc-rarity {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 12px;
-      border-radius: 12px;
-      display: inline-block;
-      margin-bottom: 8px;
-    }
-
-    #claim-gift-card .cgc-lore {
-      font-size: 12px;
-      color: var(--text-dim);
-      font-style: italic;
-      margin-bottom: 8px;
-    }
-
-    #claim-gift-card .cgc-from {
-      font-size: 13px;
-      color: var(--accent);
-      margin-bottom: 16px;
-    }
-
-    #claim-gift-card .cgc-btn {
-      padding: 10px 28px;
-      border-radius: 30px;
-      background: var(--accent);
-      color: #000;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 15px;
-      border: none;
-    }
-
-    #sidebar-nav {
-      display: flex;
-      border-top: 1px solid var(--glass-border);
-      background: var(--navbar-bg);
-      padding: 4px 2px;
-      gap: 1px;
-      justify-content: space-around;
-      flex-shrink: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    #sidebar-nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    .nav-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 5px 5px;
-      border-radius: 10px;
-      font-size: 16px;
-      transition: background 0.2s;
-      gap: 1px;
-      flex-shrink: 0;
-    }
-
-    .nav-btn span {
-      font-size: 8px;
-      font-weight: 500;
-      color: var(--text-dim);
-      white-space: nowrap;
-    }
-
-    .nav-btn:hover,
-    .nav-btn.active {
-      background: var(--glass-bg);
-    }
-
-    /* ── Panels / Modals ───────────────────────────────────────────────────────── */
-    .panel-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(4px);
-      z-index: 50;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .panel-overlay.active {
-      display: flex;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-      }
-
-      to {
-        opacity: 1;
-      }
-    }
-
-    .panel {
-      width: 90%;
-      max-width: 560px;
-      max-height: 85vh;
-      border-radius: 20px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      animation: slideUp 0.3s ease;
-    }
-
-    @keyframes slideUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .panel-header {
-      padding: 16px 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    .panel-header h3 {
-      flex: 1;
-      font-size: 17px;
-      font-weight: 600;
-    }
-
-    .panel-close {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 18px;
-      transition: background 0.2s;
-    }
-
-    .panel-close:hover {
-      background: var(--glass-bg);
-    }
-
-    .panel-body {
-      padding: 16px 20px;
-      overflow-y: auto;
-      flex: 1;
-    }
-
-    /* ── Tooltip ───────────────────────────────────────────────────────────────── */
-    #tooltip {
-      position: fixed;
-      z-index: 100;
-      padding: 14px 18px;
-      border-radius: 14px;
-      max-width: 320px;
-      display: none;
-      font-size: 13px;
       pointer-events: auto;
     }
 
-    #tooltip.active {
-      display: block;
-    }
-
-    #tooltip .tt-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    #tooltip .tt-emoji {
-      font-size: 24px;
-    }
-
-    #tooltip .tt-name {
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    #tooltip .tt-rarity {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      padding: 2px 8px;
-      border-radius: 6px;
-      letter-spacing: 0.5px;
-    }
-
-    #tooltip .tt-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 3px 0;
-      color: var(--text-dim);
-      font-size: 12px;
-    }
-
-    #tooltip .tt-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      margin: 6px 0;
-    }
-
-    #tooltip .tt-tag {
-      padding: 2px 8px;
-      border-radius: 6px;
-      font-size: 11px;
+    #classic-result-card {
       background: var(--glass-bg);
+      backdrop-filter: blur(20px);
       border: 1px solid var(--glass-border);
-    }
-
-    #tooltip .tt-tag .remove-tag {
-      margin-left: 4px;
+      border-radius: 24px;
+      padding: 32px 44px;
+      text-align: center;
+      min-width: 280px;
+      max-width: 380px;
+      transform: scale(0.7);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
       cursor: pointer;
-      opacity: 0.5;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
 
-    #tooltip .tt-tag .remove-tag:hover {
-      opacity: 1;
-    }
-
-    #tooltip .tt-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-      border-top: 1px solid var(--glass-border);
-      padding-top: 8px;
-    }
-
-    .tt-btn {
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 500;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      transition: all 0.2s;
-      color: var(--text);
-    }
-
-    .tt-btn:hover {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-
-    #tooltip .tt-notes {
-      width: 100%;
-      margin-top: 6px;
-      padding: 6px 8px;
-      border-radius: 8px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      font-size: 12px;
-      resize: vertical;
-      min-height: 40px;
-      outline: none;
-    }
-
-    /* ── Ko-fi Donate Bubble ─────────────────────────────────────────────────────── */
-    #kofi-bubble {
-      position: fixed;
-      bottom: 24px;
-      left: 24px;
-      z-index: 9000;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 8px;
-      pointer-events: none;
-    }
-    #kofi-bubble.kofi-visible {
-      pointer-events: auto;
-    }
-
-    /* The expanded card shown on launch */
-    #kofi-card {
-      background: rgba(20, 20, 40, 0.96);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 14px;
-      padding: 14px 16px 12px;
-      max-width: 230px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      opacity: 0;
-      transform: translateY(12px) scale(0.94);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-      pointer-events: none;
-    }
-    #kofi-card.kofi-card-in {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-      pointer-events: auto;
-    }
-    #kofi-card.kofi-card-out {
-      opacity: 0;
-      transform: translateY(8px) scale(0.94);
-      pointer-events: none;
-    }
-    #kofi-card-text {
-      font-size: 12.5px;
-      color: var(--text);
-      line-height: 1.55;
-      margin: 0;
-    }
-    #kofi-card-text strong {
-      color: var(--accent);
-    }
-    #kofi-card-close {
-      position: absolute;
-      top: 7px;
-      right: 9px;
-      background: none;
-      border: none;
-      color: var(--text-dim);
-      font-size: 13px;
-      cursor: pointer;
-      padding: 2px 5px;
-      border-radius: 4px;
-      line-height: 1;
-      transition: color 0.15s, background 0.15s;
-    }
-    #kofi-card-close:hover {
-      color: var(--text);
-      background: rgba(255,255,255,0.08);
-    }
-    #kofi-card { position: relative; }
-
-    /* The small collapsed circle button */
-    #kofi-pill {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      background: #FF5E5B;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 22px;
-      box-shadow: 0 4px 16px rgba(255,94,91,0.35);
-      opacity: 0;
-      transform: scale(0.6);
-      transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.2s, background 0.2s;
-      position: relative;
-    }
-    #kofi-pill.kofi-pill-in {
-      opacity: 1;
+    #classic-result-overlay.show #classic-result-card {
       transform: scale(1);
     }
-    #kofi-pill:hover {
-      background: #ff7a78;
-      box-shadow: 0 6px 22px rgba(255,94,91,0.5);
-      transform: scale(1.08);
-    }
-    #kofi-pill-tooltip {
-      position: absolute;
-      bottom: 52px;
-      left: 0;
-      background: rgba(20,20,40,0.95);
-      color: var(--text);
-      font-size: 11.5px;
-      padding: 5px 10px;
-      border-radius: 7px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transform: translateY(4px);
-      transition: opacity 0.2s, transform 0.2s;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    #kofi-pill:hover #kofi-pill-tooltip {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    /* ── Toast ──────────────────────────────────────────────────────────────────── */
-    #toast-container {
-      position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 200;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      pointer-events: none;
-      align-items: center;
+
+    #classic-result-overlay.hiding #classic-result-card {
+      transform: scale(0.85);
+      transition: transform 0.2s ease;
     }
 
-    .toast {
-      padding: 10px 20px;
-      border-radius: 12px;
-      background: var(--toast-bg);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(12px);
-      font-size: 14px;
-      font-weight: 500;
-      animation: toastIn 0.3s ease, toastOut 0.3s ease 2.7s forwards;
-      pointer-events: auto;
-      max-width: 400px;
-      text-align: center;
-    }
-
-    @keyframes toastIn {
-      from {
-        opacity: 0;
-        transform: translateY(-20px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    @keyframes toastOut {
-      from {
-        opacity: 1;
-      }
-
-      to {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-    }
-
-    /* Achievement banner */
-    .achievement-banner {
-      position: fixed;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 300;
-      padding: 14px 28px;
-      border-radius: 0 0 16px 16px;
-      background: var(--toast-bg);
-      border: 1px solid var(--accent);
-      border-top: none;
-      backdrop-filter: blur(16px);
-      animation: bannerSlide 0.4s ease, toastOut 0.3s ease 2.7s forwards;
-      font-size: 15px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    @keyframes bannerSlide {
-      from {
-        transform: translateX(-50%) translateY(-100%);
-      }
-
-      to {
-        transform: translateX(-50%) translateY(0);
-      }
-    }
-
-    /* ── Speed Run Timer ───────────────────────────────────────────────────────── */
-    #speedrun-timer {
-      position: fixed;
-      z-index: 40;
-      cursor: move;
-      display: none;
-      padding: 10px 20px;
-      border-radius: 14px;
-      font-size: 28px;
-      font-weight: 700;
-      font-variant-numeric: tabular-nums;
-      touch-action: none;
-      min-width: 180px;
-      text-align: center;
-    }
-
-    #speedrun-timer.active {
+    #classic-result-card .cr-emoji {
+      font-size: 64px;
       display: block;
+      margin-bottom: 8px;
+      font-family: var(--font-emoji);
     }
 
-    #speedrun-timer .sr-label {
+    #classic-result-card .cr-name {
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    #classic-result-card .cr-rarity {
       font-size: 11px;
-      font-weight: 500;
-      color: var(--text-dim);
+      font-weight: 700;
       text-transform: uppercase;
+      padding: 3px 12px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 14px;
       letter-spacing: 1px;
     }
 
-    #speedrun-timer.frozen {
-      color: var(--accent);
-      animation: timerFlash 0.5s ease;
-    }
-
-    #speedrun-timer .sr-giveup {
-      display: block;
-      margin-top: 6px;
-      font-size: 10px;
-      font-weight: 600;
-      color: var(--text-dim);
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      padding: 3px 8px;
-      border-radius: 6px;
-      border: 1px solid var(--glass-border);
-      background: transparent;
-      transition: all 0.15s;
-    }
-
-    #speedrun-timer .sr-giveup:hover {
-      color: #ff6666;
-      border-color: #ff6666;
-    }
-
-    #speedrun-timer.frozen .sr-giveup {
-      display: none;
-    }
-
-    @keyframes timerFlash {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.3;
-      }
-    }
-
-    /* ── Server Health ─────────────────────────────────────────────────────────── */
-    #health-dot {
-      position: fixed;
-      bottom: 12px;
-      left: 12px;
-      z-index: 30;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: #44cc44;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    #health-dot.warning {
-      background: #ccaa00;
-    }
-
-    #health-dot.error {
-      background: #cc4444;
-    }
-
-    #health-tooltip {
-      position: fixed;
-      bottom: 30px;
-      left: 12px;
-      z-index: 31;
-      padding: 8px 14px;
-      border-radius: 10px;
-      font-size: 12px;
-      display: none;
-      white-space: pre-line;
-    }
-
-    /* ── Congratulations Screen ────────────────────────────────────────────────── */
-    #congrats-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 80;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-    }
-
-    #congrats-screen.active {
-      display: flex;
-    }
-
-    #congrats-panel {
-      width: 90%;
-      max-width: 480px;
-      border-radius: 24px;
-      padding: 32px;
-      text-align: center;
-      animation: slideUp 0.4s ease;
-    }
-
-    #congrats-panel h2 {
-      font-size: 26px;
-      margin-bottom: 8px;
-    }
-
-    #congrats-panel .cg-time {
-      font-size: 48px;
-      font-weight: 700;
-      color: var(--accent);
-      margin: 12px 0;
-      font-variant-numeric: tabular-nums;
-    }
-
-    #congrats-panel .cg-detail {
-      font-size: 14px;
-      color: var(--text-dim);
-      margin: 4px 0;
-    }
-
-    #congrats-panel .cg-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    /* ── Legendary Flash ───────────────────────────────────────────────────────── */
-    .legendary-flash {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 90;
-      pointer-events: none;
-      background: radial-gradient(ellipse at center, rgba(255, 170, 0, 0.3), transparent 70%);
-      animation: legFlash 0.6s ease-out forwards;
-    }
-
-    @keyframes legFlash {
-      from {
-        opacity: 1;
-      }
-
-      to {
-        opacity: 0;
-      }
-    }
-
-    /* ── Daily Banner ──────────────────────────────────────────────────────────── */
-    #daily-banner {
-      margin: 8px 14px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-    }
-
-    #daily-banner:hover {
-      border-color: var(--accent);
-    }
-
-    #daily-banner .db-label {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-
-    #daily-banner .db-combo {
-      font-size: 15px;
-      font-weight: 500;
-    }
-
-    /* ── Form Elements ─────────────────────────────────────────────────────────── */
-    .form-group {
-      margin-bottom: 14px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--text-dim);
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-    }
-
-    .form-input:focus {
-      border-color: var(--accent);
-    }
-
-    .form-select {
-      width: 100%;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      font-size: 14px;
-      outline: none;
-      appearance: none;
-      cursor: pointer;
-    }
-
-    .btn {
-      padding: 8px 18px;
-      border-radius: var(--btn-radius);
-      font-size: 14px;
-      font-weight: 500;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      cursor: pointer;
-      transition: all 0.2s;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn:hover {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-
-    .btn-primary:hover {
-      filter: brightness(1.1);
-    }
-
-    .btn-danger {
-      border-color: #ff4444;
-      color: #ff4444;
-    }
-
-    .btn-danger:hover {
-      background: rgba(255, 68, 68, 0.15);
-    }
-
-    .btn-sm {
-      padding: 5px 12px;
-      font-size: 12px;
-      border-radius: 8px;
-    }
-
-    /* ── Settings tabs ─────────────────────────────────────────────────────────── */
-    .stab-bar {
-      display: flex;
-      flex-wrap: wrap;
-      border-bottom: 1px solid var(--glass-border);
-      margin: -20px -20px 20px;
-      padding: 0 20px;
-      gap: 2px;
-    }
-
-    .stab {
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-dim);
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      transition: color 0.15s, border-color 0.15s;
-      margin-bottom: -1px;
-      white-space: nowrap;
-    }
-
-    .stab:hover {
-      color: var(--text);
-    }
-
-    .stab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
-
-    .stab-panel {
-      display: none;
-    }
-
-    .stab-panel.active {
-      display: block;
-    }
-
-    /* Section dividers inside settings */
-    .settings-section {
-      margin: 0 -20px;
-      padding: 12px 20px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    .settings-section:last-child {
-      border-bottom: none;
-    }
-
-    .settings-section-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-transform: uppercase;
-      color: var(--text-dim);
-      margin-bottom: 12px;
-    }
-
-    /* Toggle switch */
-    .toggle-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      min-height: 36px;
-    }
-
-    .toggle-row .toggle-label {
-      font-size: 14px;
-      color: var(--text);
-      flex: 1;
-    }
-
-    .toggle-row .toggle-sub {
-      font-size: 12px;
-      color: var(--text-dim);
-      display: block;
-      margin-top: 2px;
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 42px;
-      height: 24px;
-      flex-shrink: 0;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .toggle-track {
-      position: absolute;
-      inset: 0;
-      border-radius: 12px;
-      background: var(--glass-border);
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .toggle-switch input:checked+.toggle-track {
-      background: var(--accent);
-    }
-
-    .toggle-track::after {
-      content: '';
-      position: absolute;
-      left: 3px;
-      top: 3px;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      background: #fff;
-      transition: transform 0.2s;
-    }
-
-    .toggle-switch input:checked+.toggle-track::after {
-      transform: translateX(18px);
-    }
-
-    /* Compact action button grid */
-    .action-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 4px;
-    }
-
-    .action-grid .btn {
-      justify-content: center;
+    #classic-result-card .cr-lore {
       font-size: 13px;
-    }
-
-    /* Prompt textarea */
-    .prompt-textarea {
-      width: 100%;
-      min-height: 110px;
-      resize: vertical;
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      font-size: 12px;
-      font-family: var(--font);
-      line-height: 1.5;
-      outline: none;
-    }
-
-    .prompt-textarea:focus {
-      border-color: var(--accent);
-    }
-
-    .prompt-reset-hint {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 4px;
-    }
-
-    /* ── Slot Manager ──────────────────────────────────────────────────────────── */
-    .slot-card {
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 8px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .slot-card.active {
-      border-color: var(--accent);
-    }
-
-    .slot-info {
-      flex: 1;
-    }
-
-    .slot-info .slot-name {
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .slot-info .slot-meta {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    .slot-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    /* ── Discovery Log ─────────────────────────────────────────────────────────── */
-    .log-entry {
-      padding: 8px 0;
-      border-bottom: 1px solid var(--glass-border);
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      animation: logSlide 0.3s ease;
-    }
-
-    @keyframes logSlide {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .log-entry .log-time {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-left: auto;
-      white-space: nowrap;
-    }
-
-    /* ── Achievement Card ──────────────────────────────────────────────────────── */
-    .ach-card {
-      padding: 10px 14px;
-      border-radius: 12px;
-      margin-bottom: 6px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .ach-card.locked {
-      opacity: 0.4;
-    }
-
-    .ach-icon {
-      font-size: 24px;
-    }
-
-    .ach-info {
-      flex: 1;
-    }
-
-    .ach-info .ach-name {
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .ach-info .ach-desc {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    .ach-check {
-      font-size: 18px;
-      color: var(--accent);
-    }
-
-    /* ── Collection ────────────────────────────────────────────────────────────── */
-    .col-card {
-      padding: 10px 14px;
-      border-radius: 12px;
-      margin-bottom: 6px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .col-card:hover {
-      border-color: var(--accent);
-    }
-
-    .col-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .col-header .col-emoji {
-      font-size: 18px;
-    }
-
-    .col-header .col-name {
-      font-weight: 600;
-      font-size: 14px;
-      flex: 1;
-    }
-
-    .col-header .col-count {
-      font-size: 12px;
-      color: var(--text-dim);
-    }
-
-    .col-items {
-      padding: 8px 0 0;
-      display: none;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .col-card.expanded .col-items {
-      display: flex;
-    }
-
-    /* ── Bulk Action Bar ───────────────────────────────────────────────────────── */
-    #bulk-bar {
-      display: none;
-      padding: 8px 14px;
-      gap: 6px;
-      border-top: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    #bulk-bar.active {
-      display: flex;
-    }
-
-    #bulk-bar .bulk-count {
-      font-size: 13px;
-      font-weight: 600;
-      margin-right: 8px;
-    }
-
-
-        /* ── Mobile & Responsive ────────────────────────────────────────────────────── */
-    @media (max-width: 768px) {
-      #sidebar {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
-        height: 60vh;
-        border-left: none;
-        border-top: 1px solid var(--glass-border);
-        border-radius: 20px 20px 0 0;
-        transform: translateY(calc(100% - 56px));
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        z-index: 25;
-      }
-
-      #sidebar.expanded {
-        transform: translateY(0);
-      }
-
-      #sidebar-header {
-        cursor: pointer;
-      }
-
-      #sidebar-header::before {
-        content: '';
-        width: 36px;
-        height: 4px;
-        border-radius: 2px;
-        background: var(--glass-border);
-        position: absolute;
-        top: 8px;
-        left: 50%;
-        transform: translateX(-50%);
-      }
-
-      #sidebar-nav {
-        padding-bottom: env(safe-area-inset-bottom, 8px);
-      }
-
-      .panel {
-        max-width: 98vw;
-        max-height: 88vh;
-      }
-
-      #tooltip {
-        max-width: 280px;
-      }
-
-      #speedrun-timer {
-        font-size: 20px;
-        padding: 8px 14px;
-      }
-
-      .items-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-      }
-
-      #desktop-sidebar-toggle {
-        display: none;
-      }
-
-      #spotlight-box {
-        border-radius: 0 0 18px 18px;
-      }
-
-      #spotlight-overlay {
-        padding-top: 0;
-        align-items: flex-start;
-      }
-    }
-
-    @media (max-width: 1024px) and (min-width: 769px) {
-      #sidebar {
-        width: 220px;
-      }
-
-      .items-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-      }
-    }
-
-    @media (max-width: 400px) {
-      .items-grid {
-        grid-template-columns: repeat(1, 1fr) !important;
-      }
-
-      .nav-btn span {
-        display: none;
-      }
-
-      .nav-btn {
-        min-width: 36px;
-        font-size: 18px;
-      }
-    }
-
-    @media (max-height: 600px) {
-      #sidebar {
-        height: 50vh;
-      }
-
-      #spotlight-overlay {
-        padding-top: 5vh;
-      }
-    }
-
-    /* ── Sparkle ───────────────────────────────────────────────────────────────── */
-    .sparkle {
-      position: absolute;
-      pointer-events: none;
-      width: 4px;
-      height: 4px;
-      border-radius: 50%;
-      background: var(--accent);
-      animation: sparkleAnim 0.6s ease-out forwards;
-    }
-
-    @keyframes sparkleAnim {
-      0% {
-        opacity: 1;
-        transform: scale(1) translate(0, 0);
-      }
-
-      100% {
-        opacity: 0;
-        transform: scale(0) translate(var(--sx), var(--sy));
-      }
-    }
-
-    /* ── Shake ──────────────────────────────────────────────────────────────────── */
-    .shake {
-      animation: shakeAnim 0.4s ease;
-    }
-
-    @keyframes shakeAnim {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-4px);
-      }
-
-      75% {
-        transform: translateX(4px);
-      }
-    }
-
-    /* Merge animations */
-    @keyframes mergeGlow {
-      0% {
-        opacity: 1;
-        transform: scale(0.3);
-      }
-
-      50% {
-        opacity: 0.8;
-        transform: scale(1.2);
-      }
-
-      100% {
-        opacity: 0;
-        transform: scale(1.5);
-      }
-    }
-
-    @keyframes mergeRing {
-      0% {
-        opacity: 1;
-        transform: scale(0.3);
-      }
-
-      100% {
-        opacity: 0;
-        transform: scale(2.5);
-        border-width: 0.5px;
-      }
-    }
-
-    @keyframes resultPopIn {
-      0% {
-        opacity: 0;
-        transform: scale(0) rotate(-10deg);
-      }
-
-      60% {
-        opacity: 1;
-        transform: scale(1.2) rotate(3deg);
-      }
-
-      80% {
-        transform: scale(0.95) rotate(-1deg);
-      }
-
-      100% {
-        opacity: 1;
-        transform: scale(1) rotate(0deg);
-      }
-    }
-
-    /* Screen shake for legendary */
-    .screen-shake {
-      animation: screenShake 0.4s ease;
-    }
-
-    @keyframes screenShake {
-
-      0%,
-      100% {
-        transform: translate(0);
-      }
-
-      20% {
-        transform: translate(-3px, 2px);
-      }
-
-      40% {
-        transform: translate(3px, -2px);
-      }
-
-      60% {
-        transform: translate(-2px, 3px);
-      }
-
-      80% {
-        transform: translate(2px, -3px);
-      }
-    }
-
-    /* ── Recipe Book (combo chain display) ─────────────────────────────────────── */
-    .recipe-chain {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      align-items: center;
-      font-size: 13px;
-      padding: 4px 0;
-    }
-
-    .recipe-chain .rc-step {
-      padding: 3px 8px;
-      border-radius: 8px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-    }
-
-    /* Misc helpers */
-    .hidden {
-      display: none !important;
-    }
-
-    .text-center {
-      text-align: center;
-    }
-
-    .mt-2 {
-      margin-top: 8px;
-    }
-
-    .mt-4 {
-      margin-top: 16px;
-    }
-
-    .mb-2 {
-      margin-bottom: 8px;
-    }
-
-    .flex {
-      display: flex;
-    }
-
-    .flex-wrap {
-      flex-wrap: wrap;
-    }
-
-    .gap-2 {
-      gap: 8px;
-    }
-
-    .gap-1 {
-      gap: 4px;
-    }
-
-    .items-center {
-      align-items: center;
-    }
-
-    .justify-between {
-      justify-content: space-between;
-    }
-
-    .w-full {
-      width: 100%;
-    }
-
-    /* ── Mobile Top Bar ────────────────────────────────────────────────────────── */
-    #mobile-topbar {
-      display: none;
-      padding: 10px 16px;
-      align-items: center;
-      gap: 10px;
-      background: var(--glass-bg);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--glass-border);
-      z-index: 15;
-    }
-
-    #mobile-topbar h1 {
-      font-size: 18px;
-      font-weight: 700;
-      flex: 1;
-    }
-
-    @media (max-width: 768px) {
-      #mobile-topbar {
-        display: flex;
-      }
-    }
-
-    /* ── Card flip for daily combo ─────────────────────────────────────────────── */
-    .card-flip {
-      animation: cardFlip 0.6s ease;
-    }
-
-    @keyframes cardFlip {
-      0% {
-        transform: perspective(400px) rotateY(90deg);
-        opacity: 0;
-      }
-
-      100% {
-        transform: perspective(400px) rotateY(0);
-        opacity: 1;
-      }
-    }
-
-    /* ── Multi-select checkbox ─────────────────────────────────────────────────── */
-    .item-card .ms-check {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
-      border: 2px solid var(--glass-border);
-      flex-shrink: 0;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      transition: all 0.2s;
-    }
-
-    .multi-select-mode .item-card .ms-check {
-      display: flex;
-    }
-
-    .item-card.ms-selected .ms-check {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    /* ── World Widget ──────────────────────────────────────────────────────────── */
-    #world-widget {
-      margin: 0 14px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    #world-widget-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 0;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    #world-widget-header .ww-icon {
-      font-size: 18px;
-    }
-
-    #world-widget-header .ww-name {
-      flex: 1;
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    #world-widget-header .ww-progress {
-      font-size: 11px;
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    #world-widget-header .ww-toggle {
-      font-size: 10px;
-      color: var(--text-dim);
-      transition: transform 0.2s;
-    }
-
-    #world-widget.expanded .ww-toggle {
-      transform: rotate(180deg);
-    }
-
-    .quest-panel {
-      display: none;
-      padding-bottom: 10px;
-    }
-
-    #world-widget.expanded .quest-panel {
-      display: block;
-    }
-
-    .quest-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 4px 0;
-      font-size: 13px;
-    }
-
-    .quest-item .qi-check {
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      border: 2px solid var(--glass-border);
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      transition: all 0.3s;
-    }
-
-    .quest-item.done .qi-check {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    .quest-item.done .qi-name {
-      text-decoration: line-through;
-      color: var(--text-dim);
-    }
-
-    .quest-item .qi-name {
-      text-transform: capitalize;
-    }
-
-    .quest-progress-bar {
-      height: 3px;
-      border-radius: 2px;
-      background: var(--glass-border);
-      margin: 6px 0;
-    }
-
-    .quest-progress-fill {
-      height: 100%;
-      border-radius: 2px;
-      background: var(--accent);
-      transition: width 0.5s ease;
-    }
-
-    .quest-completed-msg {
-      font-size: 12px;
-      color: var(--accent);
-      text-align: center;
-      padding: 6px 0;
-      font-weight: 600;
-    }
-
-    .world-switcher-btn {
-      width: 100%;
-      margin-top: 6px;
-      padding: 6px 12px;
-      border-radius: 10px;
-      font-size: 12px;
-      border: 1px solid var(--glass-border);
-      background: var(--glass-bg);
-      color: var(--text);
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
-    }
-
-    .world-switcher-btn:hover {
-      border-color: var(--accent);
-    }
-
-    /* ── World Panel ───────────────────────────────────────────────────────────── */
-    .world-card {
-      padding: 14px;
-      border-radius: 14px;
-      margin-bottom: 8px;
-      border: 2px solid var(--glass-border);
-      background: var(--glass-bg);
-      cursor: pointer;
-      transition: all 0.2s;
-      position: relative;
-    }
-
-    .world-card:not(.locked):hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 20px var(--accent-glow);
-    }
-
-    .world-card.active {
-      border-color: var(--accent);
-    }
-
-    .world-card.locked {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .world-card .wc-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .world-card .wc-emoji {
-      font-size: 28px;
-    }
-
-    .world-card .wc-info {
-      flex: 1;
-    }
-
-    .world-card .wc-name {
-      font-size: 15px;
-      font-weight: 700;
-    }
-
-    .world-card .wc-desc {
-      font-size: 12px;
-      color: var(--text-dim);
-      margin-top: 2px;
-    }
-
-    .world-card .wc-badge {
-      font-size: 10px;
-      font-weight: 700;
-      padding: 2px 8px;
-      border-radius: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .world-card .wc-quest-bar {
-      margin-top: 10px;
-    }
-
-    .world-card .wc-quest-text {
-      font-size: 11px;
-      color: var(--text-dim);
-      margin-top: 3px;
-    }
-
-    .world-card .wc-lock-req {
-      font-size: 12px;
-      color: var(--text-dim);
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid var(--glass-border);
-    }
-
-    /* ── Discovery Pop-up (appears at combine point, sinks to normal card) ────── */
-    .discovery-pop {
-      position: absolute;
-      z-index: 50;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 2px;
-      padding: 10px 14px;
-      border-radius: 14px;
-      min-width: 140px;
-      max-width: 220px;
-      transform-origin: center bottom;
-      animation: discoPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    }
-
-    @keyframes discoPop {
-      0% {
-        opacity: 0;
-        transform: scale(0.3) translateY(10px);
-      }
-
-      60% {
-        opacity: 1;
-        transform: scale(1.08) translateY(-4px);
-      }
-
-      100% {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-
-    .discovery-pop.shrinking {
-      animation: discoShrink 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-    }
-
-    @keyframes discoShrink {
-      0% {
-        opacity: 1;
-        transform: scale(1);
-        max-height: 200px;
-        padding: 10px 14px;
-      }
-
-      100% {
-        opacity: 0;
-        transform: scale(0.7) translateY(8px);
-        max-height: 0;
-        padding: 0 14px;
-      }
-    }
-
-    .discovery-pop .dp-top {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .discovery-pop .dp-emoji {
-      font-size: 22px;
-      flex-shrink: 0;
-    }
-
-    .discovery-pop .dp-name {
-      font-size: 14px;
-      font-weight: 700;
-      flex: 1;
-    }
-
-    .discovery-pop .dp-rarity {
-      font-size: 9px;
-      font-weight: 700;
-      text-transform: uppercase;
-      padding: 2px 6px;
-      border-radius: 5px;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-
-    .discovery-pop .dp-lore {
-      font-size: 11px;
       font-style: italic;
       color: var(--text-dim);
-      line-height: 1.4;
-      padding-top: 4px;
       border-top: 1px solid var(--glass-border);
-      width: 100%;
-      animation: loreReveal 0.3s ease 0.2s both;
+      padding-top: 12px;
+      line-height: 1.5;
     }
 
-    @keyframes loreReveal {
-      from {
-        opacity: 0;
-        transform: translateY(4px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* ── Spotlight Search (Cmd/Ctrl+K) ──────────────────────────────────────────── */
-    #spotlight-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 300;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 15vh;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.15s;
-    }
-
-    #spotlight-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-
-    #spotlight-box {
-      width: 560px;
-      max-width: 90vw;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
-      transform: translateY(-12px) scale(0.97);
-      transition: transform 0.2s cubic-bezier(0.34, 1.3, 0.64, 1);
-    }
-
-    #spotlight-overlay.show #spotlight-box {
-      transform: translateY(0) scale(1);
-    }
-
-    #spotlight-input-wrap {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--glass-border);
-    }
-
-    #spotlight-input-wrap .sl-icon {
-      font-size: 18px;
-      opacity: 0.5;
-      font-family: var(--font-emoji);
-    }
-
-    #spotlight-input {
-      flex: 1;
-      background: none;
-      border: none;
-      outline: none;
-      font-size: 17px;
-      color: var(--text);
-      font-family: var(--font);
-    }
-
-    #spotlight-results {
-      max-height: 380px;
-      overflow-y: auto;
-      padding: 6px 0;
-    }
-
-    .sl-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 18px;
-      cursor: pointer;
-      transition: background 0.1s;
-    }
-
-    .sl-item:hover,
-    .sl-item.sl-active {
-      background: var(--glass-bg);
-    }
-
-    .sl-item.sl-active {
-      background: rgba(74, 158, 255, 0.12);
-    }
-
-    .sl-emoji {
-      font-size: 22px;
-      width: 32px;
-      text-align: center;
-      font-family: var(--font-emoji);
-    }
-
-    .sl-label {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .sl-rarity {
+    #classic-result-card .cr-new-badge {
       font-size: 10px;
       font-weight: 700;
+      letter-spacing: 2px;
       text-transform: uppercase;
-      padding: 2px 7px;
-      border-radius: 6px;
-      letter-spacing: 0.5px;
+      color: var(--accent);
+      margin-bottom: 8px;
     }
 
-    .sl-tags {
+    #classic-result-card .cr-dismiss {
       font-size: 11px;
       color: var(--text-dim);
+      margin-top: 12px;
     }
 
-    .sl-hint {
-      padding: 8px 18px;
-      font-size: 11px;
-      color: var(--text-dim);
-      border-top: 1px solid var(--glass-border);
-    }
-
-    #spotlight-no-results {
-      padding: 24px;
-      text-align: center;
-      color: var(--text-dim);
-      font-size: 13px;
-    }
-
-
-        /* ── Combine: merging ghost ─────────────────────────────────────────────────── */
+    /* ── Pending (suspense) ────────────────────────────────────────────────────── */
+    /* ── Combine: merging ghost ─────────────────────────────────────────────────── */
     .merge-ghost {
       position: absolute;
       z-index: 48;
@@ -7805,23 +4832,12 @@
       margin: 10px 0;
       box-sizing: border-box;
     }
-
-    /* ── Cursor Trail ────────────────────────────────────────────────────────────── */
-    #cursor-trail-canvas {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 99998;
-      width: 100%;
-      height: 100%;
-    }
   </style>
 </head>
 
 <body>
   <canvas id="starfield"></canvas>
   <canvas id="bg-anim-canvas"></canvas>
-  <canvas id="cursor-trail-canvas"></canvas>
   <div id="custom-bg"></div>
 
   <!-- Gift: create code modal -->
@@ -7879,6 +4895,17 @@
     </div>
   </div>
 
+  <!-- Classic Mode Result Overlay -->
+  <div id="classic-result-overlay" onclick="hideClassicResult()">
+    <div id="classic-result-card">
+      <div class="cr-new-badge" id="cr-new-badge" style="display:none">✨ New Discovery!</div>
+      <span class="cr-emoji" id="cr-emoji">⭐</span>
+      <div class="cr-name" id="cr-name">Element</div>
+      <div class="cr-rarity" id="cr-rarity">Common</div>
+      <div class="cr-lore" id="cr-lore" style="display:none"></div>
+      <div class="cr-dismiss">Click to dismiss</div>
+    </div>
+  </div>
 
   <div id="app">
     <!-- Mobile Top Bar -->
@@ -7904,6 +4931,22 @@
           <div id="canvas-layer"></div>
         </div>
 
+        <!-- New Crafting Mode UI -->
+        <div id="crafting-mode-ui">
+          <div class="cm-container glass">
+            <div class="cm-slots">
+              <div id="cm-slot-1" class="cm-slot" onclick="clearSlot(1)">
+                <div class="cm-placeholder">Item 1</div>
+              </div>
+              <div class="cm-plus">+</div>
+              <div id="cm-slot-2" class="cm-slot" onclick="clearSlot(2)">
+                <div class="cm-placeholder">Item 2</div>
+              </div>
+            </div>
+            <button id="cm-combine-btn" class="cm-combine-btn" onclick="executeCraftingCombine()">Combine
+              Elements</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -7987,8 +5030,18 @@
   <!-- Tooltip -->
   <div id="tooltip" class="glass"></div>
 
+  <!-- Milestone Celebration -->
+  <div id="milestone-overlay" onclick="closeMilestone()">
+    <div id="milestone-card" onclick="event.stopPropagation()">
+      <span class="mc-icon" id="mc-icon">🎉</span>
+      <div class="mc-count" id="mc-count">50</div>
+      <div class="mc-label" id="mc-label">Discoveries!</div>
+      <div class="mc-sublabel" id="mc-sublabel">You're on a roll!</div>
+      <button class="mc-close" onclick="closeMilestone()">Keep Going!</button>
+    </div>
+  </div>
 
-    <!-- Quick Combine (Ctrl+K) -->
+  <!-- Quick Combine (Ctrl+K) -->
   <div id="quick-combine-overlay" onclick="if(event.target===this)closeQuickCombine()">
     <div id="quick-combine-box">
       <div class="qc-row">
@@ -8315,6 +5368,8 @@
     let sessionStartTime = Date.now();
     let tooltipTarget = null;
     let isMobile = window.innerWidth <= 768;
+    let craftingMode = false;
+    let craftingSlots = { 1: null, 2: null };
     let _cacheOnlyStreak = 0;
     let _sessionDiscoveries = 0;
     let _sessionRarities = new Set();
@@ -8353,7 +5408,101 @@
     let weeklyChallengeCombos = 0;
     let recipePathItem = null;
 
+    // ── Crafting Mode Logic ─────────────────────────────────────────────────────── 
+    function toggleCraftingMode() {
+      craftingMode = !craftingMode;
+      document.getElementById('crafting-mode-ui').classList.toggle('active', craftingMode);
+      $('craft-zone').style.display = craftingMode ? 'none' : 'block';
 
+      // Clear slots when switching
+      clearSlot(1);
+      clearSlot(2);
+
+      if (craftingMode) {
+        toast('Crafting Mode Enabled: Click items to add to slots');
+        closePanel('settings');
+      } else {
+        toast('Classic Drag Mode Enabled');
+      }
+    }
+
+    function updateCraftingUi() {
+      const s1 = document.getElementById('cm-slot-1');
+      const s2 = document.getElementById('cm-slot-2');
+      const btn = document.getElementById('cm-combine-btn');
+
+      function render(el, key) {
+        if (key && save.items[key]) {
+          const item = save.items[key];
+          el.innerHTML = `<span class="cm-emoji">${item.emoji}</span><span class="cm-name">${item.display}</span>`;
+          el.classList.add('filled');
+        } else {
+          el.innerHTML = `<div class="cm-placeholder">Item ${el.id.slice(-1)}</div>`;
+          el.classList.remove('filled');
+        }
+      }
+
+      render(s1, craftingSlots[1]);
+      render(s2, craftingSlots[2]);
+
+      if (craftingSlots[1] && craftingSlots[2]) {
+        btn.classList.add('ready');
+      } else {
+        btn.classList.remove('ready');
+      }
+    }
+
+    function addToCraftingSlot(key) {
+      if (!craftingSlots[1]) craftingSlots[1] = key;
+      else if (!craftingSlots[2]) craftingSlots[2] = key;
+      else {
+        // Replace slot 2 if both full
+        craftingSlots[2] = key;
+      }
+      updateCraftingUi();
+    }
+
+    function clearSlot(num) {
+      craftingSlots[num] = null;
+      updateCraftingUi();
+    }
+
+    async function executeCraftingCombine() {
+      if (!craftingSlots[1] || !craftingSlots[2]) return;
+
+      const s1 = document.getElementById('cm-slot-1');
+      const s2 = document.getElementById('cm-slot-2');
+      const btn = document.getElementById('cm-combine-btn');
+
+      // Add merging animation
+      s1.style.setProperty('--tx', '70px');
+      s1.style.setProperty('--ty', '0px');
+      s2.style.setProperty('--tx', '-70px');
+      s2.style.setProperty('--ty', '0px');
+
+      s1.classList.add('cm-merging');
+      s2.classList.add('cm-merging');
+      btn.classList.remove('ready');
+
+      // Wait for animation
+      await new Promise(r => setTimeout(r, 400));
+
+      // Get center point for result spawn
+      const rect = document.querySelector('.cm-container').getBoundingClientRect();
+      const zoneRect = document.getElementById('craft-area').getBoundingClientRect();
+      const cx = rect.left + rect.width / 2 - zoneRect.left;
+      const cy = rect.top + rect.height / 2 - zoneRect.top - 40; // Offset up a bit
+
+      spawnMergeFlash(cx, cy);
+      await doCombine(craftingSlots[1], craftingSlots[2], cx, cy);
+
+      // Reset
+      craftingSlots[1] = null;
+      craftingSlots[2] = null;
+      s1.classList.remove('cm-merging');
+      s2.classList.remove('cm-merging');
+      updateCraftingUi();
+    }
 
 
     const THEMES = ['deep-space', 'solar-flare', 'arctic-glass', 'emerald-forest', 'void', 'synthwave', 'runic-parchment', 'cyber-grid'];
@@ -8599,11 +5748,9 @@
       // ── Phase 2: apply config + render the game immediately (no more waiting)
       await initCustomThemes();   // inject custom theme CSS before first applyTheme
       applyTheme(config.theme || 'deep-space');
-      initCursorTrail();
       applyCardSize(config.item_card_size || 'normal');
       if (config.custom_background) applyCustomBg(config.custom_background);
       if (config.bg_animation) _bgAnimId = config.bg_animation;
-      if (config.cursor_trail) _cursorTrailId = config.cursor_trail;
       if (save.seed) showSeed(save.seed);
 
       renderItems();
@@ -9078,6 +6225,11 @@
 
     // ── Item Click (select for combine on mobile / add to workspace on desktop) ── 
     function onItemClick(key, e) {
+      if (craftingMode) {
+        addToCraftingSlot(key);
+        return;
+      }
+
       if (isMobile) {
         // Tap to select / combine
         if (selectedItems.includes(key)) {
@@ -9095,24 +6247,6 @@
         addToWorkspace(key, e);
       }
     }
-
-    // ── Clamp canvas item position so it never slides under the sidebar ──────────
-    function _clampToCanvas(x, y, zoneRect, elW, elH) {
-      // zoneRect must be a DOMRect (from getBoundingClientRect())
-      elW = elW || 120;
-      elH = elH || 40;
-      const sidebar = document.getElementById('sidebar');
-      const sidebarLeft = sidebar
-        ? sidebar.getBoundingClientRect().left - zoneRect.left
-        : zoneRect.width;
-      const maxX = sidebarLeft - elW - 8;
-      const maxY = zoneRect.height - elH - 8;
-      return {
-        x: Math.max(8, Math.min(x, maxX)),
-        y: Math.max(8, Math.min(y, maxY)),
-      };
-    }
-
 
     // ── Workspace Items (desktop drag & drop) ───────────────────────────────────── 
     function addToWorkspace(key, e) {
@@ -9135,10 +6269,9 @@
         zoneX = (e.clientX || e.pageX) - rect.left - 50;
         zoneY = (e.clientY || e.pageY) - rect.top - 15;
       }
-      // Clamp so item stays fully on canvas, never under the sidebar
-      const _clamped = _clampToCanvas(zoneX, zoneY, rect);
-      const x = _clamped.x;
-      const y = _clamped.y;
+      // Use zone coordinates directly
+      const x = zoneX;
+      const y = zoneY;
 
       el.style.left = x + 'px';
       el.style.top = y + 'px';
@@ -9166,18 +6299,9 @@
         origX = wi.x; origY = wi.y;
         dragging = true;
         _itemBeingDragged = true;
+        el.style.zIndex = 50;
         el.style.transition = 'none';
         el.classList.add('dragging');
-        // Reparent to body so backdrop-filter on sidebar can't obscure the item
-        const _elRect = el.getBoundingClientRect();
-        el._dragOrigParent = el.parentNode;
-        el._dragOrigLeft   = el.style.left;
-        el._dragOrigTop    = el.style.top;
-        document.body.appendChild(el);
-        el.style.position = 'fixed';
-        el.style.left = _elRect.left + 'px';
-        el.style.top  = _elRect.top  + 'px';
-        el.style.zIndex = 99999;
       };
 
       const onMove = (cx, cy) => {
@@ -9186,16 +6310,8 @@
         // Delta in screen pixels
         wi.x = origX + (cx - startX);
         wi.y = origY + (cy - startY);
-        // Element is fixed+body during drag — track mouse offset from pickup point
-        if (el._dragOrigParent) {
-          const elW = el.offsetWidth  / 2;
-          const elH = el.offsetHeight / 2;
-          el.style.left = (cx - elW) + 'px';
-          el.style.top  = (cy - elH) + 'px';
-        } else {
-          el.style.left = wi.x + 'px';
-          el.style.top  = wi.y + 'px';
-        }
+        el.style.left = wi.x + 'px';
+        el.style.top = wi.y + 'px';
 
         // Check for proximity (uses getBoundingClientRect = screen coords = correct)
         const wiRect = el.getBoundingClientRect();
@@ -9210,17 +6326,6 @@
         } else {
           hideConnector();
         }
-
-        // Highlight sidebar when hovering over it during drag
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-          const sr = sidebar.getBoundingClientRect();
-          if (cx >= sr.left && cx <= sr.right && cy >= sr.top && cy <= sr.bottom) {
-            sidebar.classList.add('drop-remove-hover');
-          } else {
-            sidebar.classList.remove('drop-remove-hover');
-          }
-        }
       };
 
       const onEnd = () => {
@@ -9233,26 +6338,6 @@
 
         hideConnector();
         clearCombinePreviews();
-
-        // Always clear the sidebar hover highlight on drop
-        const _sb = document.getElementById('sidebar');
-        if (_sb) _sb.classList.remove('drop-remove-hover');
-
-        // Restore element to canvas-layer with absolute positioning
-        if (el._dragOrigParent) {
-          const craftArea = document.getElementById('craft-area');
-          const caRect    = craftArea ? craftArea.getBoundingClientRect() : { left: 0, top: 0 };
-          const elRect    = el.getBoundingClientRect();
-          el.style.position = '';
-          const _dropClamped = _clampToCanvas(elRect.left - caRect.left, elRect.top - caRect.top, caRect);
-          wi.x = _dropClamped.x;
-          wi.y = _dropClamped.y;
-          el.style.left = wi.x + 'px';
-          el.style.top  = wi.y + 'px';
-          el._dragOrigParent.appendChild(el);
-          el._dragOrigParent = null;
-        }
-        el.style.zIndex = 10;
 
         // Check if dropped on sidebar - remove from workspace if so
         const sidebar = document.getElementById('sidebar');
@@ -9441,31 +6526,41 @@
       move(e.clientX, e.clientY);
 
       const mm = (e) => move(e.clientX, e.clientY);
-      const mu = (e) => {
-        document.removeEventListener('mousemove', mm);
-        document.removeEventListener('mouseup', mu);
 
-        // Check if dropped on sidebar - remove from inventory if so
+      // Single cleanup — always removes the ghost and all listeners.
+      // Called from pointerup, pointercancel, AND window blur so the ghost
+      // can never get stuck when:
+      //   • the mouse is released outside the browser window (blur)
+      //   • the OS cancels a touch gesture — scroll takeover, notification (pointercancel)
+      //   • the user alt-tabs or the window loses focus mid-drag (blur)
+      let _cleaned = false;
+      const cleanup = () => {
+        if (_cleaned) return;
+        _cleaned = true;
+        ghost.remove();
+        hideConnector();
+        clearCombinePreviews();
+        document.removeEventListener('pointermove', mm);
+        document.removeEventListener('pointerup', mu);
+        document.removeEventListener('pointercancel', cleanup);
+        window.removeEventListener('blur', cleanup);
+      };
+
+      const mu = (e) => {
+        cleanup();
+
+        // Check if dropped on sidebar — remove from inventory
         const sidebar = document.getElementById('sidebar');
         if (sidebar) {
           const sidebarRect = sidebar.getBoundingClientRect();
-          // Check if mouse is over sidebar
           if (e.clientX >= sidebarRect.left && e.clientX <= sidebarRect.right &&
             e.clientY >= sidebarRect.top && e.clientY <= sidebarRect.bottom) {
-            // Remove item from inventory
             delete save.items[key];
             save_api();
-            ghost.remove();
-            hideConnector();
-            clearCombinePreviews();
             renderItems();
             return;
           }
         }
-
-        ghost.remove();
-        hideConnector();
-        clearCombinePreviews();
 
         // Check for combination drop
         const closest = findClosestWorkspaceItem(e.clientX, e.clientY);
@@ -9494,8 +6589,13 @@
         }
       };
 
-      document.addEventListener('mousemove', mm);
-      document.addEventListener('mouseup', mu);
+      // pointermove/pointerup covers both mouse and touch — no separate touch handlers needed.
+      // pointercancel fires when the OS steals the pointer (touch scroll takeover, etc.).
+      // window blur fires when the user releases the mouse outside the browser window.
+      document.addEventListener('pointermove', mm);
+      document.addEventListener('pointerup', mu);
+      document.addEventListener('pointercancel', cleanup);
+      window.addEventListener('blur', cleanup);
     }
 
     // ── Combine Logic ───────────────────────────────────────────────────────────── 
@@ -9841,6 +6941,7 @@
         // ── Immediately re-render inventory on new discovery (fixes visibility bug) ──
         if (res.is_new) {
           renderItems();
+          checkMilestone();
         }
 
         // Store last combination for undo
@@ -10115,11 +7216,9 @@
       el.className = 'workspace-item glass';
       el.innerHTML = `<span class="wi-emoji">${res.emoji}</span><span>${res.display}</span>`;
       el.dataset.key = res.result;
-      // Clamp result so it stays fully on canvas, never under sidebar
-      const zone = document.getElementById('craft-zone');
-      const _cr = zone ? _clampToCanvas(cx, cy, zone.getBoundingClientRect()) : { x: cx, y: cy };
-      const canvasX = _cr.x;
-      const canvasY = _cr.y;
+      // Use zone-relative coords directly
+      const canvasX = cx;
+      const canvasY = cy;
       el.style.left = canvasX + 'px';
       el.style.top = canvasY + 'px';
       el.style.animation = 'resultPopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)';
@@ -10273,6 +7372,12 @@
       tt.style.top = ty + 'px';
     }
 
+    function hideClassicResult() {
+      const el = document.getElementById('classic-result-overlay');
+      if (!el) return;
+      el.classList.add('hiding');
+      setTimeout(() => el.classList.remove('show', 'hiding'), 350);
+    }
 
     function hideTooltip() {
       $('tooltip').classList.remove('active');
@@ -10979,10 +8084,6 @@
           <select class="form-select" id="s-bganim" onchange="changeBgAnimation(this.value)">${buildBgAnimOptions()}</select>
         </div>
         <div class="form-group">
-          <label>Cursor Trail</label>
-          <select class="form-select" id="s-cursortrail" onchange="changeCursorTrail(this.value)">${buildCursorTrailOptions()}</select>
-        </div>
-        <div class="form-group">
           <label>Custom Background</label>
           <input type="file" id="s-bgfile" accept="image/*" onchange="uploadBg(this)" style="font-size:13px;color:var(--text);width:100%">
           ${config.custom_background ? '<button class="btn btn-sm btn-danger" style="margin-top:6px" onclick="clearBg()">Remove Background</button>' : ''}
@@ -11033,7 +8134,7 @@
         ` : '<p style="font-size:12px;color:var(--text-dim);margin:0">No custom themes imported yet.</p>'}
 
         <div style="margin-top:10px">
-          <a href="https://github.com/Fr0zen1cez/Alchemica/blob/main/CUSTOM_THEME_GUIDE.md"
+          <a href="https://github.com/yourusername/alchemica/blob/main/CUSTOM_THEME_GUIDE.md"
              target="_blank"
              style="font-size:12px;color:var(--accent)">📖 How to make your own theme →</a>
         </div>
@@ -11041,6 +8142,16 @@
 
       <div class="settings-section">
         <div class="settings-section-title">Gameplay</div>
+        <div class="toggle-row">
+          <span class="toggle-label">
+            ${craftingMode ? 'Crafting Mode' : 'Classic Mode'}
+            <span class="toggle-sub">${craftingMode ? 'Drop items into slots to combine' : 'Drag items onto each other'}</span>
+          </span>
+          <label class="toggle-switch">
+            <input type="checkbox" ${craftingMode ? 'checked' : ''} onchange="toggleCraftingMode()">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
         <div class="form-group" style="margin-top:14px;">
           <label>World Seed</label>
           <div style="display:flex;gap:6px;">
@@ -12793,6 +9904,7 @@
       }
       else if (e.key === 'Escape') {
         hideSpotlight();
+        hideClassicResult();
         document.querySelectorAll('.panel-overlay.active').forEach(p => p.classList.remove('active'));
         hideTooltip();
         closeCongrats();
@@ -14682,8 +11794,54 @@
       });
     }
 
+    // ══════════════════════════════════════════════════════════════════════════════
+    // ── Milestone Celebrations ────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════════════
 
-        // ══════════════════════════════════════════════════════════════════════════════
+    const MILESTONES = [10, 25, 50, 100, 250, 500, 1000, 2000, 5000];
+    const MILESTONE_DATA = {
+      10: { icon: '🌱', label: 'Discoveries!', sub: 'Your journey begins!' },
+      25: { icon: '⚗️', label: 'Discoveries!', sub: 'You\'re getting the hang of it!' },
+      50: { icon: '🔥', label: 'Discoveries!', sub: 'Picking up the pace!' },
+      100: { icon: '💫', label: 'Discoveries!', sub: 'Triple digits — impressive!' },
+      250: { icon: '🏆', label: 'Discoveries!', sub: 'You\'re on fire!' },
+      500: { icon: '⭐', label: 'Discoveries!', sub: 'Half a thousand? Legendary!' },
+      1000: { icon: '👑', label: 'Discoveries!', sub: 'One thousand — you\'re unstoppable!' },
+      2000: { icon: '🌌', label: 'Discoveries!', sub: 'Two thousand! The cosmos bows.' },
+      5000: { icon: '🔮', label: 'Discoveries!', sub: 'Five thousand. You are the Alchemica.' },
+    };
+
+    function checkMilestone() {
+      const count = Object.keys(save.items || {}).length - 4; // exclude starters
+      if (count <= 0) return;
+      for (const m of MILESTONES) {
+        if (count === m) {
+          showMilestone(m);
+          break;
+        }
+      }
+    }
+
+    function showMilestone(count) {
+      const data = MILESTONE_DATA[count] || { icon: '🎉', label: 'Discoveries!', sub: 'Amazing!' };
+      document.getElementById('mc-icon').textContent = data.icon;
+      document.getElementById('mc-count').textContent = count;
+      document.getElementById('mc-label').textContent = data.label;
+      document.getElementById('mc-sublabel').textContent = data.sub;
+      const overlay = document.getElementById('milestone-overlay');
+      overlay.style.display = 'flex';
+      requestAnimationFrame(() => overlay.classList.add('show'));
+      // Auto-close after 5s
+      setTimeout(closeMilestone, 5000);
+    }
+
+    function closeMilestone() {
+      const overlay = document.getElementById('milestone-overlay');
+      overlay.classList.remove('show');
+      setTimeout(() => { overlay.style.display = 'none'; }, 300);
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════════
     // ── Random Combine ────────────────────────────────────────────────────────────
     // ══════════════════════════════════════════════════════════════════════════════
 
@@ -15018,231 +12176,6 @@
       // Dummy function to prevent animation loop crash
       // Add workspace pan sync logic here if needed
     }
-
-    // ══════════════════════════════════════════════════════════════════════════════
-    // ── Cursor Trail System ───────────────────────────────────────────────────────
-    // ══════════════════════════════════════════════════════════════════════════════
-
-    const CURSOR_TRAILS = [
-      // Free trails
-      { id: 'none',      name: 'None',              free: true },
-      { id: 'sparkle',   name: '✨ Sparkle Dust',   free: true },
-      { id: 'comet',     name: '☄️ Comet Tail',      free: true },
-      { id: 'bubbles',   name: '🫧 Soap Bubbles',    free: true },
-      { id: 'ribbon',    name: '🎀 Silk Ribbon',     free: true },
-      // GitHub star unlocks
-      { id: 'fire',      name: '🔥 Fire Trail ⭐',   free: false, lock: 'github' },
-      { id: 'galaxy',    name: '🌌 Galaxy Swirl ⭐', free: false, lock: 'github' },
-    ];
-
-    let _cursorTrailId   = 'none';
-    let _cursorTrailAF   = null;
-    let _cursorParticles = [];
-    let _mouseX = -999, _mouseY = -999;
-
-    function buildCursorTrailOptions() {
-      const starred = _accountData?.github_starred || false;
-      return CURSOR_TRAILS.map(t => {
-        const locked   = !t.free && !starred;
-        const sel      = _cursorTrailId === t.id ? 'selected' : '';
-        const disabled = locked ? 'disabled' : '';
-        const label    = locked ? t.name + ' (⭐ GitHub)' : t.name;
-        return `<option value="${t.id}" ${sel} ${disabled}>${label}</option>`;
-      }).join('');
-    }
-
-    function changeCursorTrail(id) {
-      _cursorTrailId = id;
-      config.cursor_trail = id;
-      APIJ('/config', { cursor_trail: id });
-      initCursorTrail();
-    }
-
-    function initCursorTrail() {
-      // Cancel existing loop
-      if (_cursorTrailAF) { cancelAnimationFrame(_cursorTrailAF); _cursorTrailAF = null; }
-      _cursorParticles = [];
-      const c = document.getElementById('cursor-trail-canvas');
-      if (!c) return;
-      if (!_cursorTrailId || _cursorTrailId === 'none') {
-        c.style.display = 'none';
-        return;
-      }
-      c.style.display = 'block';
-      c.width  = window.innerWidth;
-      c.height = window.innerHeight;
-      window.addEventListener('resize', () => {
-        c.width  = window.innerWidth;
-        c.height = window.innerHeight;
-      });
-      const ctx = c.getContext('2d');
-
-      // Track mouse
-      document.addEventListener('mousemove', e => {
-        _mouseX = e.clientX;
-        _mouseY = e.clientY;
-        _spawnTrailParticles(e.clientX, e.clientY);
-      });
-
-      function loop() {
-        ctx.clearRect(0, 0, c.width, c.height);
-        const cs   = getComputedStyle(document.documentElement);
-        const accent = cs.getPropertyValue('--accent').trim() || '#4a9eff';
-
-        // Update + draw each particle
-        _cursorParticles = _cursorParticles.filter(p => p.life > 0);
-        for (const p of _cursorParticles) {
-          p.x  += p.vx;
-          p.y  += p.vy;
-          p.vy += p.gravity || 0;
-          p.vx *= p.drag    || 0.98;
-          p.life -= p.decay;
-          p.rot  = (p.rot || 0) + (p.spin || 0);
-
-          const a = Math.max(0, p.life);
-          ctx.save();
-          ctx.globalAlpha = a;
-
-          if (_cursorTrailId === 'sparkle') {
-            // Rotating 4-point star
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rot);
-            ctx.fillStyle = p.color || accent;
-            const s = p.size * p.life;
-            ctx.beginPath();
-            for (let i = 0; i < 4; i++) {
-              const ang = (i / 4) * Math.PI * 2;
-              const ang2 = ang + Math.PI / 4;
-              ctx.lineTo(Math.cos(ang) * s, Math.sin(ang) * s);
-              ctx.lineTo(Math.cos(ang2) * s * 0.4, Math.sin(ang2) * s * 0.4);
-            }
-            ctx.closePath();
-            ctx.fill();
-
-          } else if (_cursorTrailId === 'comet') {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(0.5, p.size * p.life), 0, Math.PI * 2);
-            ctx.fillStyle = p.color || accent;
-            ctx.shadowBlur  = 8;
-            ctx.shadowColor = p.color || accent;
-            ctx.fill();
-
-          } else if (_cursorTrailId === 'bubbles') {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-            ctx.strokeStyle = p.color || accent;
-            ctx.lineWidth   = 1.5;
-            ctx.stroke();
-
-          } else if (_cursorTrailId === 'ribbon') {
-            ctx.strokeStyle = p.color || accent;
-            ctx.lineWidth   = p.size * p.life * 2;
-            ctx.lineCap     = 'round';
-            ctx.beginPath();
-            ctx.moveTo(p.x, p.y);
-            ctx.lineTo(p.px || p.x, p.py || p.y);
-            ctx.stroke();
-
-          } else if (_cursorTrailId === 'fire') {
-            const hue = 20 + Math.floor(p.life * 40);
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, Math.max(0.5, p.size * p.life), 0, Math.PI * 2);
-            ctx.fillStyle = `hsl(${hue}, 100%, 60%)`;
-            ctx.shadowBlur  = 12;
-            ctx.shadowColor = `hsl(${hue}, 100%, 50%)`;
-            ctx.fill();
-
-          } else if (_cursorTrailId === 'galaxy') {
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rot);
-            const hue = (p.hue || 200) + _cursorParticles.indexOf(p) * 3;
-            ctx.fillStyle = `hsl(${hue % 360}, 80%, 75%)`;
-            ctx.beginPath();
-            ctx.arc(0, 0, Math.max(0.5, p.size * p.life), 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          ctx.restore();
-        }
-
-        _cursorTrailAF = requestAnimationFrame(loop);
-      }
-      _cursorTrailAF = requestAnimationFrame(loop);
-    }
-
-    function _spawnTrailParticles(x, y) {
-      if (!_cursorTrailId || _cursorTrailId === 'none') return;
-      const cs     = getComputedStyle(document.documentElement);
-      const accent = cs.getPropertyValue('--accent').trim() || '#4a9eff';
-
-      if (_cursorTrailId === 'sparkle') {
-        for (let i = 0; i < 2; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          const spd = 0.5 + Math.random() * 1.5;
-          _cursorParticles.push({
-            x, y, vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd - 0.5,
-            size: 4 + Math.random() * 4, life: 0.9, decay: 0.025,
-            rot: Math.random() * Math.PI, spin: (Math.random() - 0.5) * 0.15,
-            color: [accent, '#fff', '#ffe066', '#ff88cc'][Math.floor(Math.random() * 4)],
-            gravity: 0.03, drag: 0.96,
-          });
-        }
-      } else if (_cursorTrailId === 'comet') {
-        _cursorParticles.push({
-          x, y, vx: (Math.random() - 0.5) * 0.5, vy: -0.2 - Math.random() * 0.5,
-          size: 3 + Math.random() * 3, life: 0.85, decay: 0.028,
-          color: accent, drag: 0.95,
-        });
-      } else if (_cursorTrailId === 'bubbles') {
-        if (Math.random() < 0.4) {
-          _cursorParticles.push({
-            x: x + (Math.random() - 0.5) * 10,
-            y: y + (Math.random() - 0.5) * 10,
-            vx: (Math.random() - 0.5) * 0.8,
-            vy: -0.3 - Math.random() * 0.8,
-            size: 4 + Math.random() * 8, life: 0.8, decay: 0.018,
-            color: accent,
-          });
-        }
-      } else if (_cursorTrailId === 'ribbon') {
-        const last = _cursorParticles[_cursorParticles.length - 1];
-        _cursorParticles.push({
-          x, y, px: last?.x ?? x, py: last?.y ?? y,
-          vx: 0, vy: 0, size: 2, life: 0.7, decay: 0.035,
-          color: accent,
-        });
-      } else if (_cursorTrailId === 'fire') {
-        for (let i = 0; i < 3; i++) {
-          _cursorParticles.push({
-            x: x + (Math.random() - 0.5) * 8,
-            y: y + (Math.random() - 0.5) * 8,
-            vx: (Math.random() - 0.5) * 1.2,
-            vy: -1.5 - Math.random() * 1.5,
-            size: 5 + Math.random() * 5, life: 1.0, decay: 0.032,
-            gravity: -0.05, drag: 0.97,
-          });
-        }
-      } else if (_cursorTrailId === 'galaxy') {
-        for (let i = 0; i < 2; i++) {
-          const ang = Math.random() * Math.PI * 2;
-          _cursorParticles.push({
-            x: x + Math.cos(ang) * (Math.random() * 6),
-            y: y + Math.sin(ang) * (Math.random() * 6),
-            vx: Math.cos(ang) * (0.3 + Math.random() * 0.8),
-            vy: Math.sin(ang) * (0.3 + Math.random() * 0.8) - 0.3,
-            size: 2 + Math.random() * 3, life: 0.9, decay: 0.022,
-            rot: 0, spin: (Math.random() - 0.5) * 0.2,
-            hue: Math.floor(Math.random() * 360),
-          });
-        }
-      }
-
-      // Cap particle count to avoid memory buildup
-      if (_cursorParticles.length > 300) {
-        _cursorParticles = _cursorParticles.slice(-300);
-      }
-    }
-
 
 
     function buildBgAnimOptions() {
