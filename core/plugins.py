@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 from core.logger import get_logger
 from core.config import load_config, get_base_dir
+from core.utils import combo_key
 
 logger = get_logger()
 
@@ -50,9 +51,9 @@ def get_plugin_combos():
             try:
                 pc = fn()
                 for k, v in pc.items():
-                    # Ensure alphabetical key
-                    parts = sorted([p.lower().strip() for p in k.split("+")])
-                    nk = "+".join(parts)
+                    # Ensure alphabetical key via shared utility
+                    a, _, b = k.partition("+")
+                    nk = combo_key(a, b) if b else k.lower().strip()
                     
                     if nk in combos and combos[nk] != v:
                         conflicts.append({"key": nk, "plugins": [combos[nk]["_source"], pid]})
